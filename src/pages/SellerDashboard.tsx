@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Layout/Header';
@@ -25,6 +24,10 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type ProductCategory = Database['public']['Enums']['product_category'];
+type ListingStatus = Database['public']['Enums']['listing_status'];
 
 interface Store {
   id: string;
@@ -40,13 +43,13 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
-  category: string;
+  category: ProductCategory;
   original_price: number;
   current_price: number;
   discount_percentage: number;
   expiry_date: string;
   quantity_available: number;
-  status: string;
+  status: ListingStatus;
   created_at: string;
 }
 
@@ -69,21 +72,21 @@ const SellerDashboard = () => {
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
-    category: 'other',
+    category: 'other' as ProductCategory,
     original_price: '',
     expiry_date: '',
     quantity_available: '1'
   });
 
   const categories = [
-    { value: 'dairy', label: 'Dairy' },
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'meat', label: 'Meat' },
-    { value: 'produce', label: 'Produce' },
-    { value: 'pantry', label: 'Pantry' },
-    { value: 'frozen', label: 'Frozen' },
-    { value: 'beverages', label: 'Beverages' },
-    { value: 'other', label: 'Other' }
+    { value: 'dairy' as const, label: 'Dairy' },
+    { value: 'bakery' as const, label: 'Bakery' },
+    { value: 'meat' as const, label: 'Meat' },
+    { value: 'produce' as const, label: 'Produce' },
+    { value: 'pantry' as const, label: 'Pantry' },
+    { value: 'frozen' as const, label: 'Frozen' },
+    { value: 'beverages' as const, label: 'Beverages' },
+    { value: 'other' as const, label: 'Other' }
   ];
 
   useEffect(() => {
@@ -185,12 +188,15 @@ const SellerDashboard = () => {
       const { error } = await supabase
         .from('products')
         .insert({
-          ...newProduct,
-          store_id: activeStore.id,
+          name: newProduct.name,
+          description: newProduct.description,
+          category: newProduct.category,
           original_price: originalPrice,
           current_price: currentPrice,
           discount_percentage: discountPercentage,
-          quantity_available: parseInt(newProduct.quantity_available)
+          expiry_date: newProduct.expiry_date,
+          quantity_available: parseInt(newProduct.quantity_available),
+          store_id: activeStore.id
         });
 
       if (error) throw error;
@@ -212,7 +218,7 @@ const SellerDashboard = () => {
     }
   };
 
-  const updateProductStatus = async (productId: string, status: string) => {
+  const updateProductStatus = async (productId: string, status: ListingStatus) => {
     try {
       const { error } = await supabase
         .from('products')
@@ -482,7 +488,7 @@ const SellerDashboard = () => {
                               <Label htmlFor="product-category">Category</Label>
                               <Select
                                 value={newProduct.category}
-                                onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}
+                                onValueChange={(value: ProductCategory) => setNewProduct({ ...newProduct, category: value })}
                               >
                                 <SelectTrigger>
                                   <SelectValue />

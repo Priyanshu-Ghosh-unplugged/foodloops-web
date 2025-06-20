@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type ProductCategory = Database['public']['Enums']['product_category'];
 
 interface Product {
   id: string;
@@ -27,7 +30,7 @@ interface Product {
   original_price: number;
   discount_percentage: number;
   expiry_date: string;
-  category: string;
+  category: ProductCategory;
   image_url: string | null;
   quantity_available: number;
   stores: {
@@ -41,7 +44,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState('discount');
 
   const categories = [
@@ -73,7 +76,7 @@ const Products = () => {
         .gt('quantity_available', 0);
 
       if (selectedCategory !== 'all') {
-        query = query.eq('category', selectedCategory);
+        query = query.eq('category', selectedCategory as ProductCategory);
       }
 
       // Apply sorting
