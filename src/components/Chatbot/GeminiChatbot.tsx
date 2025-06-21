@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,9 +11,14 @@ import {
   X, 
   Minimize2,
   Maximize2,
-  Sparkles
+  Sparkles,
+  AlertCircle,
+  Bug
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { config, isGeminiConfigured } from '@/config/env';
+import { testGeminiAPI } from '@/utils/gemini-test';
+import { testCurrentEndpoint, testAllEndpoints } from '@/utils/gemini-debug';
 
 interface Message {
   id: string;
@@ -47,8 +51,12 @@ const GeminiChatbot = () => {
   }, [messages]);
 
   const callGeminiAPI = async (userMessage: string): Promise<string> => {
+    if (!isGeminiConfigured()) {
+      throw new Error('Gemini API key not configured');
+    }
+
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAlA3unQELAAW5jeahTPKlu8xCiSLFTFmM`, {
+      const response = await fetch(`${config.geminiApiUrl}?key=${config.geminiApiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,15 +93,36 @@ User question: ${userMessage}`
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API error response:', errorData);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
       const data = await response.json();
+      console.log('Gemini API response:', data);
       
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
         return data.candidates[0].content.parts[0].text;
+      } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+        throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
       } else {
-        throw new Error('Invalid response from Gemini API');
+        console.error('Unexpected API response structure:', data);
+        throw new Error('Invalid response structure from Gemini API');
       }
     } catch (error) {
       console.error('Gemini API error:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('API key not configured')) {
+          return 'Sorry, the AI assistant is not properly configured. Please contact support.';
+        }
+        if (error.message.includes('Content blocked')) {
+          return 'Sorry, I cannot respond to that request. Please try asking something else.';
+        }
+        if (error.message.includes('API request failed')) {
+          return 'Sorry, I\'m having trouble connecting to the AI service right now. Please try again in a moment. आप बाद में कोशिश कर सकते हैं।';
+        }
+      }
       return 'Sorry, I\'m having trouble connecting right now. Please try again in a moment. आप बाद में कोशिश कर सकते हैं।';
     }
   };
@@ -126,6 +155,15 @@ User question: ${userMessage}`
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Failed to send message');
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: 'Sorry, I encountered an error. Please try again.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
@@ -137,6 +175,57 @@ User question: ${userMessage}`
       handleSend();
     }
   };
+
+  const handleDebugTest = async () => {
+    console.log('🔍 Starting API debug test...');
+    setLoading(true);
+    
+    try {
+      // Test current endpoint first
+      const currentResult = await testCurrentEndpoint();
+      console.log('Current endpoint test result:', currentResult);
+      
+      if (!currentResult.success) {
+        console.log('Current endpoint failed, testing all endpoints...');
+        const allResults = await testAllEndpoints();
+        console.log('All endpoints test results:', allResults);
+        
+        if (allResults.success) {
+          toast.success(`Found working endpoint: ${allResults.workingEndpoint}`);
+          // Update the config with the working endpoint
+          console.log('Please update the API URL to:', allResults.workingEndpoint);
+        } else {
+          toast.error('No working endpoints found. Check API key and permissions.');
+        }
+      } else {
+        toast.success('Current endpoint is working!');
+      }
+    } catch (error) {
+      console.error('Debug test error:', error);
+      toast.error('Debug test failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show configuration warning if API key is not set
+  if (!isGeminiConfigured()) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Card className="w-80 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <AlertCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">AI Assistant Unavailable</span>
+            </div>
+            <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
+              Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isOpen) {
     return (
@@ -168,6 +257,16 @@ User question: ${userMessage}`
             </Badge>
           </CardTitle>
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDebugTest}
+              disabled={loading}
+              className="w-8 h-8 p-0 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+              title="Debug API"
+            >
+              <Bug className="w-4 h-4" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"
