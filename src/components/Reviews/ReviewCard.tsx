@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ThumbsUp, Flag, Star } from 'lucide-react';
 import { Review, formatTimestamp, getStarRating } from '@/integrations/aptos/client';
-import { useWallet } from '@/contexts/WalletContext';
+import { useUser } from '@civic/auth-web3/react';
 import { toast } from 'sonner';
 
 interface ReviewCardProps {
@@ -18,10 +18,10 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   onVote, 
   onReport 
 }) => {
-  const { isConnected } = useWallet();
+  const { user } = useUser();
 
   const handleVote = () => {
-    if (!isConnected) {
+    if (!user) {
       toast.error('Please connect your wallet to vote');
       return;
     }
@@ -29,7 +29,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   };
 
   const handleReport = () => {
-    if (!isConnected) {
+    if (!user) {
       toast.error('Please connect your wallet to report');
       return;
     }

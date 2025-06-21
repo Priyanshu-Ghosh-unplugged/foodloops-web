@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,11 +15,10 @@ import {
   Star,
   Leaf
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { Database } from '@/integrations/supabase/types';
 
-type ProductCategory = Database['public']['Enums']['product_category'];
+// Mock Data and Types
+type ProductCategory = 'dairy' | 'bakery' | 'meat' | 'produce' | 'pantry' | 'frozen' | 'beverages' | 'other';
 
 interface Product {
   id: string;
@@ -39,7 +37,14 @@ interface Product {
   };
 }
 
-const Products = () => {
+const mockProducts: Product[] = [
+    { id: 'prod-1', name: 'Organic Milk', description: 'Fresh whole milk, nearing expiry.', category: 'dairy', original_price: 3.99, current_price: 1.99, discount_percentage: 50, expiry_date: new Date(new Date().getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(), quantity_available: 10, image_url: '/placeholder.svg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
+    { id: 'prod-2', name: 'Sourdough Bread', description: 'Artisan sourdough, best by tomorrow.', category: 'bakery', original_price: 5.50, current_price: 2.75, discount_percentage: 50, expiry_date: new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(), quantity_available: 5, image_url: '/placeholder.svg', stores: { name: "Community Co-op", address: '456 Market St' } },
+    { id: 'prod-3', name: 'Avocados (Bag of 4)', description: 'Ripe and ready to eat.', category: 'produce', original_price: 6.00, current_price: 3.00, discount_percentage: 50, expiry_date: new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), quantity_available: 20, image_url: '/placeholder.svg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
+];
+
+
+const ProductsPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,46 +69,29 @@ const Products = () => {
   }, [selectedCategory, sortBy]);
 
   const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      let query = supabase
-        .from('products')
-        .select(`
-          *,
-          stores (name, address)
-        `)
-        .eq('status', 'active')
-        .gt('quantity_available', 0);
+    setLoading(true);
+    // Mock implementation
+    setTimeout(() => {
+        let data = [...mockProducts];
+        if (selectedCategory !== 'all') {
+            data = data.filter(p => p.category === selectedCategory);
+        }
+        
+        switch (sortBy) {
+            case 'discount':
+              data.sort((a, b) => b.discount_percentage - a.discount_percentage);
+              break;
+            case 'price':
+              data.sort((a, b) => a.current_price - b.current_price);
+              break;
+            case 'expiry':
+              data.sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+              break;
+        }
 
-      if (selectedCategory !== 'all') {
-        query = query.eq('category', selectedCategory as ProductCategory);
-      }
-
-      // Apply sorting
-      switch (sortBy) {
-        case 'discount':
-          query = query.order('discount_percentage', { ascending: false });
-          break;
-        case 'price':
-          query = query.order('current_price', { ascending: true });
-          break;
-        case 'expiry':
-          query = query.order('expiry_date', { ascending: true });
-          break;
-        default:
-          query = query.order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
-    } finally {
-      setLoading(false);
-    }
+        setProducts(data);
+        setLoading(false);
+    }, 500);
   };
 
   const filteredProducts = products.filter(product =>
@@ -129,34 +117,23 @@ const Products = () => {
 
   const handlePurchase = async (productId: string, price: number) => {
     // Simple purchase simulation
-    toast.success('Added to cart! Redirecting to checkout...');
+    toast.success('Added to cart! (This is a mock action)');
     // In a real app, this would handle the complete purchase flow
   };
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-      {/* Mandala Background */}
-      <div 
-        className="absolute inset-0 opacity-8 bg-repeat bg-center"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='mandala' x='0' y='0' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23d97706' stroke-width='0.5'/%3E%3Ccircle cx='50' cy='50' r='20' fill='none' stroke='%23d97706' stroke-width='0.3'/%3E%3Ccircle cx='50' cy='50' r='10' fill='none' stroke='%23d97706' stroke-width='0.2'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23mandala)'/%3E%3C/svg%3E")`
-        }}
-      />
-      
-      <Header />
-      
-      <main className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-            Near-Expiry Products 🛒
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Discover amazing deals on quality products and help reduce food waste
-          </p>
-        </div>
-
-        {/* Filters and Search */}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+             <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                Discover Deals
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Find quality products at great prices and help reduce waste.
+              </p>
+            </div>
+            {/* Filters and Search */}
         <Card className="mb-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -237,73 +214,29 @@ const Products = () => {
               return (
                 <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-amber-100 dark:border-gray-700">
                   <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 flex items-center justify-center relative">
-                    {product.image_url ? (
-                      <img 
-                        src={product.image_url} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ShoppingCart className="w-12 h-12 text-amber-600" />
-                    )}
-                    
-                    {/* Discount Badge */}
+                    <img 
+                      src={product.image_url || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
                     <Badge className="absolute top-2 right-2 bg-red-500 text-white">
                       {Math.round(product.discount_percentage)}% OFF
                     </Badge>
                   </div>
-                  
                   <CardContent className="p-4">
-                    {/* Product Name */}
-                    <h3 className="font-semibold text-lg mb-1 line-clamp-1 text-gray-800 dark:text-gray-200">{product.name}</h3>
-                    
-                    {/* Category */}
-                    <Badge variant="secondary" className="mb-2 text-xs">
-                      {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                    <h3 className="font-semibold truncate">{product.name}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{product.stores.name}</p>
+                    <div className="flex justify-between items-center mt-2">
+                        <span className="font-bold text-lg text-green-600">${product.current_price.toFixed(2)}</span>
+                        <span className="line-through text-sm text-gray-400">${product.original_price.toFixed(2)}</span>
+                    </div>
+                    <Badge variant="outline" className={`mt-2 w-full justify-center ${getExpiryBadgeColor(daysUntilExpiry)}`}>
+                        <Clock className="w-3 h-3 mr-1" />
+                        Expires in {daysUntilExpiry} day(s)
                     </Badge>
-                    
-                    {/* Price with Indian Rupee symbol */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl font-bold text-green-600">
-                        ₹{product.current_price}
-                      </span>
-                      <span className="text-sm text-gray-500 line-through">
-                        ₹{product.original_price}
-                      </span>
-                    </div>
-                    
-                    {/* Store Info */}
-                    <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
-                      <MapPin className="w-3 h-3" />
-                      <span className="truncate">{product.stores?.name}</span>
-                    </div>
-                    
-                    {/* Expiry Info */}
-                    <div className="flex items-center gap-1 text-xs mb-3">
-                      <Clock className="w-3 h-3" />
-                      <Badge 
-                        variant="secondary" 
-                        className={`${getExpiryBadgeColor(daysUntilExpiry)} text-xs`}
-                      >
-                        {daysUntilExpiry <= 0 ? 'Expired' : 
-                         daysUntilExpiry === 1 ? 'Expires tomorrow' :
-                         `${daysUntilExpiry} days left`}
-                      </Badge>
-                    </div>
-                    
-                    {/* Quantity Available */}
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                      {product.quantity_available} available
-                    </div>
-                    
-                    {/* Action Button */}
-                    <Button 
-                      onClick={() => handlePurchase(product.id, product.current_price)}
-                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg"
-                      size="sm"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
+                    <Button className="w-full mt-4" onClick={() => handlePurchase(product.id, product.current_price)}>
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Add to Cart
                     </Button>
                   </CardContent>
                 </Card>
@@ -311,34 +244,9 @@ const Products = () => {
             })}
           </div>
         )}
-
-        {/* Eco Impact Banner */}
-        <Card className="mt-12 bg-gradient-to-r from-green-500 to-emerald-500 border-none text-white">
-          <CardContent className="p-8 text-center">
-            <Leaf className="w-12 h-12 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Every Purchase Makes a Difference</h2>
-            <p className="text-lg opacity-90 mb-4">
-              You're helping reduce food waste and supporting local businesses
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-              <div>
-                <div className="text-2xl font-bold">2.1 tonnes</div>
-                <div className="text-sm opacity-80">Food saved weekly</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">35%</div>
-                <div className="text-sm opacity-80">Average savings</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">1,200+</div>
-                <div className="text-sm opacity-80">Happy customers</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+        </main>
     </div>
   );
 };
 
-export default Products;
+export default ProductsPage;

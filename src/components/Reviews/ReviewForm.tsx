@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Star } from 'lucide-react';
 import { validateReview } from '@/integrations/aptos/client';
-import { useWallet } from '@/contexts/WalletContext';
+import { useUser } from '@civic/auth-web3/react';
 import { toast } from 'sonner';
 
 interface ReviewFormProps {
@@ -27,7 +27,7 @@ const CATEGORIES = [
 ];
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = false }) => {
-  const { isConnected } = useWallet();
+  const { user } = useUser();
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -37,7 +37,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = fa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isConnected) {
+    if (!user) {
       toast.error('Please connect your wallet to submit a review');
       return;
     }
@@ -158,12 +158,12 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = fa
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isLoading || !isConnected}
+            disabled={isLoading || !user}
           >
             {isLoading ? 'Submitting...' : 'Submit Review'}
           </Button>
 
-          {!isConnected && (
+          {!user && (
             <p className="text-sm text-muted-foreground text-center">
               Please connect your wallet to submit a review
             </p>

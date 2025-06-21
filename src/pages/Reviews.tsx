@@ -27,7 +27,7 @@ import {
   voteReviewHelpful,
   reportReview
 } from '@/integrations/aptos/client';
-import { useWallet } from '@/contexts/WalletContext';
+import { useUser } from '@civic/auth-web3/react';
 import { toast } from 'sonner';
 
 const CATEGORIES = [
@@ -43,7 +43,7 @@ const CATEGORIES = [
 ];
 
 export default function Reviews() {
-  const { address, isConnected } = useWallet();
+  const { user } = useUser();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [filteredReviews, setFilteredReviews] = useState<Review[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -120,14 +120,15 @@ export default function Reviews() {
   };
 
   const handleSubmitReview = async (rating: number, title: string, comment: string, category: string) => {
-    if (!address) {
+    if (!user) {
       toast.error('Wallet not connected');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await submitReview(address, rating, title, comment, category);
+      // @ts-ignore
+      await submitReview(user.wallet.address, rating, title, comment, category);
       await loadReviews(); // Reload reviews
       await loadGlobalStats(); // Reload stats
     } catch (error) {
@@ -139,13 +140,14 @@ export default function Reviews() {
   };
 
   const handleVote = async (reviewId: string) => {
-    if (!address) {
+    if (!user) {
       toast.error('Wallet not connected');
       return;
     }
 
     try {
-      await voteReviewHelpful(address, parseInt(reviewId));
+      // @ts-ignore
+      await voteReviewHelpful(user.wallet.address, parseInt(reviewId));
       await loadReviews(); // Reload reviews
       toast.success('Vote recorded!');
     } catch (error) {
@@ -155,13 +157,14 @@ export default function Reviews() {
   };
 
   const handleReport = async (reviewId: string) => {
-    if (!address) {
+    if (!user) {
       toast.error('Wallet not connected');
       return;
     }
 
     try {
-      await reportReview(address, parseInt(reviewId));
+      // @ts-ignore
+      await reportReview(user.wallet.address, parseInt(reviewId));
       await loadReviews(); // Reload reviews
       toast.success('Review reported');
     } catch (error) {

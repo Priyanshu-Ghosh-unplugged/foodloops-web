@@ -1,467 +1,213 @@
-
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Layout/Header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { 
-  MessageCircle, 
-  Heart, 
-  Share2, 
-  Plus,
-  Search,
-  Users,
-  BookOpen,
-  Lightbulb,
-  Clock
-} from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { Input } from '@/components/ui/input';
+import { ThumbsUp, MessageSquare, Send } from 'lucide-react';
+import { useUser } from '@civic/auth-web3/react';
 import { toast } from 'sonner';
 
-interface CommunityPost {
-  id: string;
-  title: string;
-  content: string;
-  post_type: string;
-  tags: string[] | null;
-  likes_count: number;
-  image_url: string | null;
-  created_at: string;
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
+// Mock data and functions
+const mockPosts = [
+  {
+    id: 1,
+    content: 'Welcome to the FoodLoops community! Share your tips on reducing food waste.',
+    author_id: 'system',
+    created_at: new Date().toISOString(),
+    likes: 5,
+    user: { name: 'FoodLoops Bot' },
+    comments: [
+      { id: 1, content: 'Great to be here!', author_id: 'user1', created_at: new Date().toISOString(), user: { name: 'Eco Warrior' } }
+    ]
+  }
+];
+
+const getMockPosts = async () => {
+  return Promise.resolve({ data: mockPosts, error: null });
+};
+
+const createMockPost = async (content, author_id) => {
+  const newPost = {
+    id: Math.random(),
+    content,
+    author_id,
+    created_at: new Date().toISOString(),
+    likes: 0,
+    user: { name: 'You' }, // Placeholder user
+    comments: []
   };
-}
+  mockPosts.unshift(newPost);
+  return Promise.resolve({ data: [newPost], error: null });
+};
 
 const Community = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newPost, setNewPost] = useState({
-    title: '',
-    content: '',
-    post_type: 'recipe',
-    tags: ''
-  });
+  const { user } = useUser();
+  const [posts, setPosts] = useState([]);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchPosts();
-  }, [activeTab]);
+  }, []);
 
   const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      let query = supabase
-        .from('community_posts')
-        .select(`
-          *,
-          profiles (full_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (activeTab !== 'all') {
-        query = query.eq('post_type', activeTab);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setPosts(data || []);
-    } catch (error) {
+    setLoading(true);
+    // Using mock function
+    const { data, error } = await getMockPosts();
+    if (error) {
+      toast.error('Failed to fetch posts');
       console.error('Error fetching posts:', error);
-      toast.error('Failed to load community posts');
-    } finally {
-      setLoading(false);
+    } else {
+      setPosts(data || []);
     }
+    setLoading(false);
   };
 
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) {
+      toast.error('Post cannot be empty');
+      return;
+    }
     if (!user) {
-      toast.error('Please sign in to create a post');
-      navigate('/auth');
+      toast.error('You must be logged in to post');
       return;
     }
 
-    try {
-      const tags = newPost.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-      
-      const { error } = await supabase
-        .from('community_posts')
-        .insert({
-          title: newPost.title,
-          content: newPost.content,
-          post_type: newPost.post_type,
-          tags,
-          author_id: user.id
-        });
-
-      if (error) throw error;
-
-      toast.success('Post created successfully!');
-      setIsCreateModalOpen(false);
-      setNewPost({ title: '', content: '', post_type: 'recipe', tags: '' });
-      fetchPosts();
-    } catch (error) {
-      console.error('Error creating post:', error);
+    setLoading(true);
+    // Using mock function
+    const { error } = await createMockPost(newPostContent, user.sub);
+    if (error) {
       toast.error('Failed to create post');
+      console.error('Error creating post:', error);
+    } else {
+      setNewPostContent('');
+      await fetchPosts(); // Refresh posts
     }
+    setLoading(false);
   };
 
-  const handleLikePost = async (postId: string) => {
+  const handleLikePost = async (postId) => {
     if (!user) {
-      toast.error('Please sign in to like posts');
-      navigate('/auth');
+      toast.error('You must be logged in to like a post');
       return;
     }
-
-    try {
-      // Check if user already liked this post
-      const { data: existingLike } = await supabase
-        .from('post_likes')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('post_id', postId)
-        .single();
-
-      if (existingLike) {
-        // Unlike the post
-        await supabase
-          .from('post_likes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', postId);
-
-        // Decrease likes count
-        const { data: post } = await supabase
-          .from('community_posts')
-          .select('likes_count')
-          .eq('id', postId)
-          .single();
-
-        if (post) {
-          await supabase
-            .from('community_posts')
-            .update({ likes_count: Math.max(0, post.likes_count - 1) })
-            .eq('id', postId);
-        }
-      } else {
-        // Like the post
-        await supabase
-          .from('post_likes')
-          .insert({ user_id: user.id, post_id: postId });
-
-        // Increase likes count
-        const { data: post } = await supabase
-          .from('community_posts')
-          .select('likes_count')
-          .eq('id', postId)
-          .single();
-
-        if (post) {
-          await supabase
-            .from('community_posts')
-            .update({ likes_count: post.likes_count + 1 })
-            .eq('id', postId);
-        }
-      }
-
-      fetchPosts();
-    } catch (error) {
-      console.error('Error liking post:', error);
-      toast.error('Failed to like post');
-    }
+    // This is a placeholder and will not persist
+    toast.info('Liking posts is temporarily disabled.');
   };
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const getPostTypeIcon = (type: string) => {
-    switch (type) {
-      case 'recipe':
-        return <BookOpen className="w-4 h-4" />;
-      case 'tip':
-        return <Lightbulb className="w-4 h-4" />;
-      default:
-        return <MessageCircle className="w-4 h-4" />;
+  const handleAddComment = async (postId, commentContent) => {
+    if (!commentContent.trim()) {
+      toast.error('Comment cannot be empty');
+      return;
     }
-  };
-
-  const getPostTypeBadge = (type: string) => {
-    const colors = {
-      recipe: 'bg-blue-100 text-blue-700',
-      tip: 'bg-yellow-100 text-yellow-700',
-      discussion: 'bg-green-100 text-green-700'
-    };
-    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+    if (!user) {
+      toast.error('You must be logged in to comment');
+      return;
+    }
+    // This is a placeholder and will not persist
+    toast.info('Commenting is temporarily disabled.');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
-      {/* Mandala Background */}
-      <div 
-        className="absolute inset-0 opacity-8 bg-repeat bg-center"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='mandala' x='0' y='0' width='100' height='100' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%23d97706' stroke-width='0.5'/%3E%3Ccircle cx='50' cy='50' r='20' fill='none' stroke='%23d97706' stroke-width='0.3'/%3E%3Ccircle cx='50' cy='50' r='10' fill='none' stroke='%23d97706' stroke-width='0.2'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23mandala)'/%3E%3C/svg%3E")`
-        }}
-      />
-      
-      <Header />
-      
-      <main className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Community Hub 👥
-          </h1>
-          <p className="text-gray-600">
-            Share recipes, tips, and connect with fellow eco-conscious food lovers
-          </p>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Community Hub</h1>
 
-        {/* Actions Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search posts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/60 backdrop-blur-sm border-amber-100"
+      {/* Create Post */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Share something with the community</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <Textarea
+              placeholder="What's on your mind?"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              disabled={!user || loading}
             />
+            <Button onClick={handleCreatePost} disabled={!user || loading} className="self-end">
+              <Send className="w-4 h-4 mr-2" />
+              {loading ? 'Posting...' : 'Post'}
+            </Button>
           </div>
-          
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Post
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Create a New Post</DialogTitle>
-                <DialogDescription>
-                  Share your recipes, tips, or start a discussion with the community.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreatePost} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    placeholder="Enter a catchy title..."
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="post_type">Type</Label>
-                  <select
-                    id="post_type"
-                    value={newPost.post_type}
-                    onChange={(e) => setNewPost({ ...newPost, post_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="recipe">Recipe</option>
-                    <option value="tip">Tip</option>
-                    <option value="discussion">Discussion</option>
-                  </select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    value={newPost.content}
-                    onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    placeholder="Share your content here..."
-                    className="min-h-[120px]"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={newPost.tags}
-                    onChange={(e) => setNewPost({ ...newPost, tags: e.target.value })}
-                    placeholder="e.g., vegetarian, easy, quick"
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsCreateModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-                  >
-                    Create Post
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+        </CardContent>
+      </Card>
+
+      {/* Posts */}
+      <div className="space-y-6">
+        {posts.map((post) => (
+          <PostCard 
+            key={post.id} 
+            post={post} 
+            onLike={handleLikePost} 
+            onAddComment={handleAddComment}
+            currentUser={user}
+          />
+        ))}
+        {loading && <p>Loading posts...</p>}
+      </div>
+    </div>
+  );
+};
+
+// PostCard component
+const PostCard = ({ post, onLike, onAddComment, currentUser }) => {
+  const [comment, setComment] = useState('');
+
+  const handleCommentSubmit = (e) => {
+    e.preventDefault();
+    onAddComment(post.id, comment);
+    setComment('');
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-4">
+          <div className="font-semibold">{post.user?.name || 'Anonymous'}</div>
+          <div className="text-xs text-muted-foreground">
+            {new Date(post.created_at).toLocaleString()}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="mb-4">{post.content}</p>
+        <div className="flex items-center gap-4 mb-4">
+          <Button variant="ghost" size="sm" onClick={() => onLike(post.id)} disabled={!currentUser}>
+            <ThumbsUp className="w-4 h-4 mr-2" />
+            {post.likes}
+          </Button>
+          <Button variant="ghost" size="sm" disabled={!currentUser}>
+            <MessageSquare className="w-4 h-4 mr-2" />
+            {post.comments?.length || 0}
+          </Button>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full max-w-md grid-cols-4 bg-white/60 backdrop-blur-sm">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="recipe">Recipes</TabsTrigger>
-            <TabsTrigger value="tip">Tips</TabsTrigger>
-            <TabsTrigger value="discussion">Discussion</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Comments */}
+        <div className="space-y-2">
+          {post.comments?.map((c) => (
+            <div key={c.id} className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
+              <span className="font-semibold">{c.user?.name || 'Anonymous'}: </span>
+              {c.content}
+            </div>
+          ))}
+        </div>
 
-        {/* Posts */}
-        {loading ? (
-          <div className="space-y-6">
-            {[...Array(3)].map((_, i) => (
-              <Card key={i} className="animate-pulse bg-white/60 backdrop-blur-sm border-amber-100">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full" />
-                    <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-32" />
-                      <div className="h-3 bg-gray-200 rounded w-24" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-full" />
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <Card className="text-center py-12 bg-white/60 backdrop-blur-sm border-amber-100">
-            <CardContent>
-              <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No posts found</h3>
-              <p className="text-gray-600 mb-4">Be the first to share something with the community!</p>
-              <Button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-              >
-                Create First Post
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {filteredPosts.map((post) => (
-              <Card key={post.id} className="bg-white/80 backdrop-blur-sm border-amber-100 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarImage src={post.profiles?.avatar_url || ''} />
-                        <AvatarFallback>
-                          {post.profiles?.full_name?.charAt(0) || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{post.profiles?.full_name || 'Anonymous'}</p>
-                          <Badge 
-                            variant="secondary" 
-                            className={`${getPostTypeBadge(post.post_type)} text-xs`}
-                          >
-                            {getPostTypeIcon(post.post_type)}
-                            <span className="ml-1 capitalize">{post.post_type}</span>
-                          </Badge>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <CardTitle className="text-xl">{post.title}</CardTitle>
-                </CardHeader>
-                
-                <CardContent>
-                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{post.content}</p>
-                  
-                  {/* Tags */}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {post.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          #{tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Actions */}
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleLikePost(post.id)}
-                      className="flex items-center space-x-2 hover:text-red-500"
-                    >
-                      <Heart className="w-4 h-4" />
-                      <span>{post.likes_count}</span>
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center space-x-2 hover:text-blue-500"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Comment</span>
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center space-x-2 hover:text-green-500"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      <span>Share</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        {/* Add Comment */}
+        {currentUser && (
+          <form onSubmit={handleCommentSubmit} className="flex gap-2 mt-4">
+            <Input
+              placeholder="Add a comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <Button type="submit">
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
         )}
-      </main>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
