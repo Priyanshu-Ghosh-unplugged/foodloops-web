@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,16 +6,17 @@ import {
   Leaf,
   Sun,
   Moon,
-  ShoppingCart
+  ShoppingCart,
+  User
 } from 'lucide-react';
-import { UserButton, useUser } from '@civic/auth-web3/react';
+import { useCivicAuth } from '@/contexts/CivicAuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import { WalletConnect } from './WalletConnect';
 import { Cart } from '@/components/Cart/Cart';
 
 const Header = () => {
-  const { user } = useUser();
+  const { user, isAuthenticated, logout } = useCivicAuth();
   const { isDark, toggleTheme } = useTheme();
   const { items } = useCart();
   const [isCartOpen, setIsCartOpen] = React.useState(false);
@@ -66,7 +66,13 @@ const Header = () => {
             >
               Reviews
             </Link>
-            {user && (
+            <Link 
+              to="/civic-auth" 
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
+            >
+              Auth Demo
+            </Link>
+            {isAuthenticated && user?.user_type === 'seller' && (
               <Link 
                 to="/seller" 
                 className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
@@ -110,15 +116,27 @@ const Header = () => {
             </Button>
             
             {/* Profile Button */}
-            {user && (
+            {isAuthenticated && user && (
               <Link to="/profile">
                 <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400">
-                  Profile
+                  <User className="w-4 h-4 mr-1" />
+                  {user.name}
                 </Button>
               </Link>
             )}
             
-            <UserButton />
+            {/* Auth Button */}
+            {!isAuthenticated ? (
+              <Link to="/civic-auth">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+            ) : (
+              <Button variant="outline" size="sm" onClick={logout}>
+                Logout
+              </Button>
+            )}
           </div>
         </div>
       </div>

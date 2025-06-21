@@ -3,6 +3,15 @@ export const config = {
   // Try different endpoints - the API might be using a different model or endpoint
   geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
   
+  // API Configuration
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  
+  // MongoDB Configuration
+  mongodbUri: import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017/foodloops',
+  
+  // Civic Auth Configuration
+  civicClientId: import.meta.env.VITE_CIVIC_CLIENT_ID || '584fc3e9-922e-4b13-95af-cd0a9ea42ba2',
+  
   // Aptos Configuration
   aptosNetwork: import.meta.env.VITE_APTOS_NETWORK || 'devnet',
   aptosNodeUrl: import.meta.env.VITE_APTOS_NODE_URL || 'https://fullnode.devnet.aptoslabs.com',
@@ -27,4 +36,12 @@ export const isAptosConfigured = () => {
 
 export const isEthereumConfigured = () => {
   return !!config.rewardsContractAddress && !!config.web3ModalProjectId;
+};
+
+export const isMongoDBConfigured = () => {
+  return !!config.mongodbUri;
+};
+
+export const isCivicConfigured = () => {
+  return !!config.civicClientId;
 }; 
