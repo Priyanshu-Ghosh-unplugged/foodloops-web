@@ -1,3 +1,4 @@
+
 export const config = {
   geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
   // Try different endpoints - the API might be using a different model or endpoint
@@ -20,6 +21,12 @@ export const config = {
   aptosNodeUrl: import.meta.env.VITE_APTOS_NODE_URL || 'https://fullnode.devnet.aptoslabs.com',
   aptosFaucetUrl: import.meta.env.VITE_APTOS_FAUCET_URL || 'https://faucet.devnet.aptoslabs.com',
   foodLoopsModuleAddress: import.meta.env.VITE_FOOD_LOOPS_MODULE_ADDRESS || '0x1',
+  
+  // Ethereum Configuration
+  ethereumNetwork: import.meta.env.VITE_ETHEREUM_NETWORK || 'sepolia',
+  ethereumRpcUrl: import.meta.env.VITE_ETHEREUM_RPC_URL || 'https://sepolia.infura.io/v3/your-project-id',
+  ethereumChainId: parseInt(import.meta.env.VITE_ETHEREUM_CHAIN_ID || '11155111'),
+  rewardsContractAddress: import.meta.env.VITE_REWARDS_CONTRACT_ADDRESS || '',
 } as const;
 
 export const isGeminiConfigured = () => {
@@ -40,4 +47,8 @@ export const isCivicConfigured = () => {
 
 export const isWalletConnectConfigured = () => {
     return !!config.walletConnectProjectId;
-}; 
+};
+
+export const isEthereumConfigured = () => {
+  return !!config.rewardsContractAddress && !!config.ethereumRpcUrl;
+};
