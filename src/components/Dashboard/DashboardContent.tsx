@@ -44,9 +44,9 @@ const mockEcoScore: EcoScore = {
 };
 
 const mockRecommendedProducts: Product[] = [
-    { id: 'prod-2', name: 'Sourdough Bread', current_price: 220, original_price: 440, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'bakery', image_url: '/placeholder.svg', stores: { name: 'Community Co-op', address: '456 Market St' } },
-    { id: 'prod-3', name: 'Avocados (Bag of 4)', current_price: 240, original_price: 480, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'produce', image_url: '/placeholder.svg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
-    { id: 'prod-1', name: 'Organic Milk', current_price: 160, original_price: 320, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'dairy', image_url: '/placeholder.svg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
+    { id: 'prod-2', name: 'Sourdough Bread', current_price: 220, original_price: 440, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'bakery', image_url: '/images/sourdough-bread.jpg', stores: { name: 'Community Co-op', address: '456 Market St' } },
+    { id: 'prod-3', name: 'Avocados (Bag of 4)', current_price: 240, original_price: 480, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'produce', image_url: '/images/avocados.jpg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
+    { id: 'prod-1', name: 'Organic Milk', current_price: 160, original_price: 320, discount_percentage: 50, expiry_date: new Date().toISOString(), category: 'dairy', image_url: '/images/organic-milk.jpg', stores: { name: "Priyan's Fresh Finds", address: '123 Green Way' } },
 ];
 
 

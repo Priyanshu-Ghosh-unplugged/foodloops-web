@@ -12,10 +12,8 @@ const storesRouter = require('./routes/stores');
 const usersRouter = require('./routes/users');
 const ordersRouter = require('./routes/orders');
 
-// Environment variables
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+// Register ts-node to handle TypeScript files
+require('ts-node').register();
 
 // Start the cron job scheduler
 require('./scripts/scheduler');
@@ -68,11 +66,6 @@ app.use('*', (req, res) => {
     message: `Cannot ${req.method} ${req.originalUrl}`
   });
 });
-
-// Environment variables
-if (process.env.NODE_ENV !== 'production') {
-  // ... existing code ...
-}
 
 app.listen(PORT, () => {
   console.log(`🚀 FoodLoops API server running on port ${PORT}`);
