@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,15 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Leaf,
   Sun,
-  Moon
+  Moon,
+  ShoppingCart
 } from 'lucide-react';
 import { UserButton, useUser } from '@civic/auth-web3/react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCart } from '@/contexts/CartContext';
 import { WalletConnect } from './WalletConnect';
+import { Cart } from '@/components/Cart/Cart';
 
 const Header = () => {
   const { user } = useUser();
   const { isDark, toggleTheme } = useTheme();
+  const { items } = useCart();
+  const [isCartOpen, setIsCartOpen] = React.useState(false);
+
+  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-amber-100 dark:border-gray-700 sticky top-0 z-40">
@@ -35,27 +43,33 @@ const Header = () => {
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
+              to="/dashboard" 
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
+            >
+              Dashboard
+            </Link>
+            <Link 
               to="/products" 
-              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
             >
               Products
             </Link>
             <Link 
               to="/community" 
-              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
             >
               Community
             </Link>
             <Link 
               to="/reviews" 
-              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
             >
               Reviews
             </Link>
             {user && (
               <Link 
                 to="/seller" 
-                className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
               >
                 Sell
               </Link>
@@ -64,6 +78,24 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {/* Cart Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCartOpen(true)}
+              className="relative text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500"
+                >
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
+
             {/* Wallet Connection */}
             <WalletConnect />
             
@@ -77,10 +109,22 @@ const Header = () => {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             
+            {/* Profile Button */}
+            {user && (
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400">
+                  Profile
+                </Button>
+              </Link>
+            )}
+            
             <UserButton />
           </div>
         </div>
       </div>
+
+      {/* Cart Sidebar */}
+      <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </header>
   );
 };
