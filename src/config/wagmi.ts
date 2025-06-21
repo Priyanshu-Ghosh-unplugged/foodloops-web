@@ -1,21 +1,21 @@
 import { createConfig, http } from 'wagmi';
-import { mainnet, polygon, sepolia } from 'wagmi/chains';
-import { metaMask, walletConnect, coinbaseWallet } from 'wagmi/connectors';
+import { mainnet, sepolia } from 'wagmi/chains';
+import { walletConnect } from 'wagmi/connectors';
+import { config as appConfig } from './env';
+
+const projectId = appConfig.walletConnectProjectId;
+
+if (!projectId) {
+  console.warn('WalletConnect project ID is not set. Please set VITE_WALLETCONNECT_PROJECT_ID in your .env file.');
+}
 
 export const wagmiConfig = createConfig({
-  chains: [mainnet, polygon, sepolia],
+  chains: [mainnet, sepolia],
   connectors: [
-    metaMask(),
-    walletConnect({
-      projectId: 'your-project-id',
-    }),
-    coinbaseWallet({
-      appName: 'FoodLoops',
-    }),
+    walletConnect({ projectId, showQrModal: true }),
   ],
   transports: {
     [mainnet.id]: http(),
-    [polygon.id]: http(),
     [sepolia.id]: http(),
   },
 }); 

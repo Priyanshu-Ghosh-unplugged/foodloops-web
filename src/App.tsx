@@ -15,7 +15,6 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Community from "./pages/Community";
 import SellerDashboard from "./pages/SellerDashboard";
-import Profile from "./pages/Profile";
 import Reviews from "./pages/Reviews";
 import CartPage from "./pages/CartPage";
 import TransactionPage from './pages/TransactionPage';
@@ -43,7 +42,6 @@ const App = () => (
                       <Route path="/community" element={<Community />} />
                       <Route path="/reviews" element={<Reviews />} />
                       <Route path="/seller" element={<SellerDashboard />} />
-                      <Route path="/profile" element={<Profile />} />
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/transaction" element={<TransactionPage />} />
                       <Route path="/civic-auth" element={<CivicAuthDemo />} />

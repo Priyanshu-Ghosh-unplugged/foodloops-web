@@ -12,6 +12,9 @@ export const config = {
   // Civic Auth Configuration
   civicClientId: import.meta.env.VITE_CIVIC_CLIENT_ID || '584fc3e9-922e-4b13-95af-cd0a9ea42ba2',
   
+  // WalletConnect Configuration
+  walletConnectProjectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '',
+  
   // Aptos Configuration
   aptosNetwork: import.meta.env.VITE_APTOS_NETWORK || 'devnet',
   aptosNodeUrl: import.meta.env.VITE_APTOS_NODE_URL || 'https://fullnode.devnet.aptoslabs.com',
@@ -33,4 +36,8 @@ export const isMongoDBConfigured = () => {
 
 export const isCivicConfigured = () => {
   return !!config.civicClientId;
+};
+
+export const isWalletConnectConfigured = () => {
+    return !!config.walletConnectProjectId;
 }; 
