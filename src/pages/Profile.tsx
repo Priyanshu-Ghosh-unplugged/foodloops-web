@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Layout/Header';
@@ -26,12 +25,16 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type UserRole = Database['public']['Enums']['user_role'];
+type ProductCategory = Database['public']['Enums']['product_category'];
 
 interface Profile {
   id: string;
   email: string;
   full_name: string | null;
-  role: string;
+  role: UserRole;
   avatar_url: string | null;
   location: string | null;
   phone: string | null;
@@ -40,7 +43,7 @@ interface Profile {
 }
 
 interface UserPreferences {
-  preferred_categories: string[] | null;
+  preferred_categories: ProductCategory[] | null;
   max_distance_km: number | null;
   max_price: number | null;
   notification_enabled: boolean | null;
@@ -63,14 +66,14 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
 
   const categories = [
-    { value: 'dairy', label: 'Dairy' },
-    { value: 'bakery', label: 'Bakery' },
-    { value: 'meat', label: 'Meat' },
-    { value: 'produce', label: 'Produce' },
-    { value: 'pantry', label: 'Pantry' },
-    { value: 'frozen', label: 'Frozen' },
-    { value: 'beverages', label: 'Beverages' },
-    { value: 'other', label: 'Other' }
+    { value: 'dairy' as const, label: 'Dairy' },
+    { value: 'bakery' as const, label: 'Bakery' },
+    { value: 'meat' as const, label: 'Meat' },
+    { value: 'produce' as const, label: 'Produce' },
+    { value: 'pantry' as const, label: 'Pantry' },
+    { value: 'frozen' as const, label: 'Frozen' },
+    { value: 'beverages' as const, label: 'Beverages' },
+    { value: 'other' as const, label: 'Other' }
   ];
 
   useEffect(() => {
@@ -182,7 +185,10 @@ const Profile = () => {
         .from('user_preferences')
         .upsert({
           user_id: user?.id,
-          ...preferences
+          preferred_categories: preferences.preferred_categories,
+          max_distance_km: preferences.max_distance_km,
+          max_price: preferences.max_price,
+          notification_enabled: preferences.notification_enabled
         });
 
       if (error) throw error;
@@ -195,7 +201,7 @@ const Profile = () => {
     }
   };
 
-  const handleRoleChange = async (newRole: string) => {
+  const handleRoleChange = async (newRole: UserRole) => {
     if (!profile) return;
 
     setSaving(true);
@@ -344,7 +350,7 @@ const Profile = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="role">Account Type</Label>
-                    <Select value={profile.role} onValueChange={handleRoleChange}>
+                    <Select value={profile.role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>

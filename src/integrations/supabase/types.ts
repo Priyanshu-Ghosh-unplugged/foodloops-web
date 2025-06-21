@@ -376,6 +376,56 @@ export type Database = {
           },
         ]
       }
+      user_rewards: {
+        Row: {
+          badges: string[] | null
+          created_at: string | null
+          current_points: number | null
+          id: string
+          level_name: string | null
+          level_number: number | null
+          next_level_points: number | null
+          points_earned: number | null
+          points_redeemed: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badges?: string[] | null
+          created_at?: string | null
+          current_points?: number | null
+          id?: string
+          level_name?: string | null
+          level_number?: number | null
+          next_level_points?: number | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badges?: string[] | null
+          created_at?: string | null
+          current_points?: number | null
+          id?: string
+          level_name?: string | null
+          level_number?: number | null
+          next_level_points?: number | null
+          points_earned?: number | null
+          points_redeemed?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rewards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -383,6 +433,19 @@ export type Database = {
     Functions: {
       calculate_dynamic_price: {
         Args: { original_price: number; expiry_date: string }
+        Returns: number
+      }
+      calculate_dynamic_price_advanced: {
+        Args: {
+          original_price: number
+          expiry_date: string
+          category: Database["public"]["Enums"]["product_category"]
+          current_stock?: number
+        }
+        Returns: number
+      }
+      calculate_reward_points: {
+        Args: { savings_amount: number; items_saved: number }
         Returns: number
       }
     }

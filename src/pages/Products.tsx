@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
+
+type ProductCategory = Database['public']['Enums']['product_category'];
 
 interface Product {
   id: string;
@@ -27,7 +30,7 @@ interface Product {
   original_price: number;
   discount_percentage: number;
   expiry_date: string;
-  category: string;
+  category: ProductCategory;
   image_url: string | null;
   quantity_available: number;
   stores: {
@@ -41,7 +44,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState('discount');
 
   const categories = [
@@ -73,7 +76,7 @@ const Products = () => {
         .gt('quantity_available', 0);
 
       if (selectedCategory !== 'all') {
-        query = query.eq('category', selectedCategory);
+        query = query.eq('category', selectedCategory as ProductCategory);
       }
 
       // Apply sorting
@@ -118,10 +121,10 @@ const Products = () => {
   };
 
   const getExpiryBadgeColor = (daysUntilExpiry: number) => {
-    if (daysUntilExpiry <= 1) return 'bg-red-100 text-red-700';
-    if (daysUntilExpiry <= 3) return 'bg-orange-100 text-orange-700';
-    if (daysUntilExpiry <= 7) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-green-100 text-green-700';
+    if (daysUntilExpiry <= 1) return 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+    if (daysUntilExpiry <= 3) return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
+    if (daysUntilExpiry <= 7) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300';
+    return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
   };
 
   const handlePurchase = async (productId: string, price: number) => {
@@ -131,7 +134,7 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
       {/* Mandala Background */}
       <div 
         className="absolute inset-0 opacity-8 bg-repeat bg-center"
@@ -145,16 +148,16 @@ const Products = () => {
       <main className="relative z-10 container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-2">
             Near-Expiry Products 🛒
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Discover amazing deals on quality products and help reduce food waste
           </p>
         </div>
 
         {/* Filters and Search */}
-        <Card className="mb-8 bg-white/60 backdrop-blur-sm border-amber-100">
+        <Card className="mb-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search */}
@@ -164,13 +167,13 @@ const Products = () => {
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 dark:bg-gray-700 dark:text-gray-200"
                 />
               </div>
 
               {/* Category Filter */}
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
+                <SelectTrigger className="dark:bg-gray-700 dark:text-gray-200">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,7 +187,7 @@ const Products = () => {
 
               {/* Sort By */}
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
+                <SelectTrigger className="dark:bg-gray-700 dark:text-gray-200">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,8 +199,8 @@ const Products = () => {
               </Select>
 
               {/* Results Count */}
-              <div className="flex items-center justify-center bg-amber-50 rounded-lg px-4">
-                <span className="text-sm text-amber-700 font-medium">
+              <div className="flex items-center justify-center bg-amber-50 dark:bg-amber-900/20 rounded-lg px-4">
+                <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
                   {filteredProducts.length} products found
                 </span>
               </div>
@@ -210,21 +213,21 @@ const Products = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <div className="aspect-video bg-gray-200" />
+                <div className="aspect-video bg-gray-200 dark:bg-gray-700" />
                 <CardContent className="p-4">
-                  <div className="h-4 bg-gray-200 rounded mb-2" />
-                  <div className="h-3 bg-gray-200 rounded mb-4" />
-                  <div className="h-8 bg-gray-200 rounded" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          <Card className="text-center py-12 bg-white/60 backdrop-blur-sm border-amber-100">
+          <Card className="text-center py-12 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
             <CardContent>
               <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No products found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters</p>
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No products found</h3>
+              <p className="text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
             </CardContent>
           </Card>
         ) : (
@@ -232,8 +235,8 @@ const Products = () => {
             {filteredProducts.map((product) => {
               const daysUntilExpiry = getDaysUntilExpiry(product.expiry_date);
               return (
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/80 backdrop-blur-sm border-amber-100">
-                  <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center relative">
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-amber-100 dark:border-gray-700">
+                  <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 flex items-center justify-center relative">
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
@@ -252,25 +255,25 @@ const Products = () => {
                   
                   <CardContent className="p-4">
                     {/* Product Name */}
-                    <h3 className="font-semibold text-lg mb-1 line-clamp-1">{product.name}</h3>
+                    <h3 className="font-semibold text-lg mb-1 line-clamp-1 text-gray-800 dark:text-gray-200">{product.name}</h3>
                     
                     {/* Category */}
                     <Badge variant="secondary" className="mb-2 text-xs">
                       {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </Badge>
                     
-                    {/* Price */}
+                    {/* Price with Indian Rupee symbol */}
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-2xl font-bold text-green-600">
-                        ${product.current_price}
+                        ₹{product.current_price}
                       </span>
                       <span className="text-sm text-gray-500 line-through">
-                        ${product.original_price}
+                        ₹{product.original_price}
                       </span>
                     </div>
                     
                     {/* Store Info */}
-                    <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{product.stores?.name}</span>
                     </div>
@@ -289,7 +292,7 @@ const Products = () => {
                     </div>
                     
                     {/* Quantity Available */}
-                    <div className="text-xs text-gray-600 mb-3">
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                       {product.quantity_available} available
                     </div>
                     
@@ -319,7 +322,7 @@ const Products = () => {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
               <div>
-                <div className="text-2xl font-bold">2.1 tons</div>
+                <div className="text-2xl font-bold">2.1 tonnes</div>
                 <div className="text-sm opacity-80">Food saved weekly</div>
               </div>
               <div>
