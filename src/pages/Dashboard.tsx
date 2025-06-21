@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@civic/auth-web3/react';
 import Header from '@/components/Layout/Header';
-import RewardsCard from '@/components/Rewards/RewardsCard';
+import { RewardsManager } from '@/components/Rewards/RewardsManager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,8 +114,8 @@ const Dashboard = () => {
                     <RecommendedProductsSection products={recommendedProducts} onPurchase={handlePurchase} />
                 </div>
                 <div className="space-y-8">
-                    {/* Rewards Card */}
-                    <RewardsCard />
+                    {/* Rewards Manager */}
+                    <RewardsManager />
                     {/* Recent Orders Section */}
                     <RecentOrdersSection orders={recentOrders} />
                 </div>

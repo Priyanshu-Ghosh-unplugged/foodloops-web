@@ -6,19 +6,40 @@ import { Wallet, LogOut, Coins, Zap, ExternalLink } from 'lucide-react';
 import { useWallet } from '@/contexts/WalletContext';
 import { useEthereumWallet } from '@/contexts/EthereumWalletContext';
 import { toast } from 'sonner';
+import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+
+const WALLET_ICONS: Record<string, JSX.Element> = {
+  petra: (
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block align-middle mr-2"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path d="M10 22L22 10M10 10h12v12" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+  pontem: (
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block align-middle mr-2"><rect width="32" height="32" rx="16" fill="#1A1A1A"/><path d="M10 22L22 10M10 10h12v12" stroke="#E84142" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
+};
+
+const WALLET_LIST = [
+  { name: 'Petra', id: 'petra' },
+  { name: 'Pontem', id: 'pontem' },
+];
 
 export const WalletConnect: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'aptos' | 'ethereum'>('aptos');
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   
   // Aptos wallet
   const { 
     address: aptosAddress, 
     isConnected: isAptosConnected, 
-    isLoading: isAptosLoading, 
     connectWallet: connectAptosWallet, 
-    disconnectWallet: disconnectAptosWallet, 
-    fundAccount 
+    disconnectWallet: disconnectAptosWallet
   } = useWallet();
+  const { wallets } = useAptosWallet();
 
   // Ethereum wallet - with error handling
   let ethWalletHook;
@@ -61,12 +82,13 @@ export const WalletConnect: React.FC = () => {
     return address;
   };
 
-  const handleConnectAptos = async () => {
+  const handleConnectAptos = async (walletId: string) => {
     try {
-      await connectAptosWallet();
+      setSelectedWalletId(walletId);
+      console.log('Connecting Aptos wallet:', walletId);
+      connectAptosWallet(walletId);
     } catch (error) {
       console.error('Error connecting Aptos wallet:', error);
-      toast.error('Failed to connect Aptos wallet');
     }
   };
 
@@ -87,15 +109,6 @@ export const WalletConnect: React.FC = () => {
     disconnectEthWallet();
   };
 
-  const handleFundAccount = async () => {
-    try {
-      await fundAccount();
-    } catch (error) {
-      console.error('Error funding account:', error);
-      toast.error('Failed to fund account');
-    }
-  };
-
   const handleClaimRewards = async () => {
     try {
       await claimRewards();
@@ -112,15 +125,6 @@ export const WalletConnect: React.FC = () => {
   const getAptosExplorerUrl = (address: string) => {
     return `https://explorer.aptoslabs.com/account/${address}?network=devnet`;
   };
-
-  if (isAptosLoading || isEthLoading) {
-    return (
-      <Button variant="outline" disabled>
-        <Wallet className="h-4 w-4 mr-2" />
-        Connecting...
-      </Button>
-    );
-  }
 
   return (
     <div className="flex items-center gap-2">
@@ -139,15 +143,11 @@ export const WalletConnect: React.FC = () => {
         <TabsContent value="aptos" className="mt-2">
           {isAptosConnected && aptosAddress ? (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleFundAccount}>
-                <Coins className="h-4 w-4 mr-1" />
-                Fund
-              </Button>
               <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
-                <Wallet className="h-4 w-4 text-green-500" />
+                {WALLET_ICONS[selectedWalletId || 'petra']}
                 <span className="text-sm font-mono">{formatAddress(aptosAddress)}</span>
                 <a
-                  href={getAptosExplorerUrl(aptosAddress)}
+                  href={`https://explorer.aptoslabs.com/account/${aptosAddress}?network=devnet`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700"
@@ -155,15 +155,27 @@ export const WalletConnect: React.FC = () => {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleDisconnectAptos}>
+              <Button variant="ghost" size="sm" onClick={disconnectAptosWallet}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <Button onClick={handleConnectAptos} className="w-full">
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Aptos
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="w-full" variant="outline">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Connect Aptos Wallet
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {wallets.map((wallet) => (
+                  <DropdownMenuItem key={wallet.name} onClick={() => handleConnectAptos(wallet.name)}>
+                    {WALLET_ICONS[wallet.name.toLowerCase()] || <Wallet className="h-4 w-4 mr-2" />}
+                    {wallet.name} <span className="ml-2 text-xs text-gray-400">({wallet.name})</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </TabsContent>
 

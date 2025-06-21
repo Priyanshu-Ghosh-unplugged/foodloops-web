@@ -21,6 +21,7 @@ import CartPage from "./pages/CartPage";
 import TransactionPage from './pages/TransactionPage';
 import CivicAuthDemo from './pages/CivicAuthDemo';
 import GeminiChatbot from "./components/Chatbot/GeminiChatbot";
+import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react';
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -31,28 +32,30 @@ const App = () => (
       <CivicAuthProvider clientId={config.civicClientId}>
         <ThemeProvider>
           <TooltipProvider>
-            <WalletProvider>
-              <EthereumWalletProvider>
-                <CartProvider>
-                  <Toaster />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/products" element={<Products />} />
-                      <Route path="/community" element={<Community />} />
-                      <Route path="/reviews" element={<Reviews />} />
-                      <Route path="/seller" element={<SellerDashboard />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route path="/transaction" element={<TransactionPage />} />
-                      <Route path="/civic-auth" element={<CivicAuthDemo />} />
-                    </Routes>
-                    <GeminiChatbot />
-                  </BrowserRouter>
-                </CartProvider>
-              </EthereumWalletProvider>
-            </WalletProvider>
+            <AptosWalletAdapterProvider>
+              <WalletProvider>
+                <EthereumWalletProvider>
+                  <CartProvider>
+                    <Toaster />
+                    <BrowserRouter>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/community" element={<Community />} />
+                        <Route path="/reviews" element={<Reviews />} />
+                        <Route path="/seller" element={<SellerDashboard />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/transaction" element={<TransactionPage />} />
+                        <Route path="/civic-auth" element={<CivicAuthDemo />} />
+                      </Routes>
+                      <GeminiChatbot />
+                    </BrowserRouter>
+                  </CartProvider>
+                </EthereumWalletProvider>
+              </WalletProvider>
+            </AptosWalletAdapterProvider>
           </TooltipProvider>
         </ThemeProvider>
       </CivicAuthProvider>

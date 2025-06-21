@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-food_loops_addr = "0000000000000000000000000000000000000000000000000000000000000001"
+food_loops_addr = "0xb3d7f59847e81bc3b2fb9018981b1b5098715d45a3e784c430901360ec56a3e0"
 
 [dependencies]
 AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
