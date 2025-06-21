@@ -1,73 +1,108 @@
-# Welcome to your Lovable project
+# 🍔 FoodLoops - Reduce Waste, Share Abundance
 
-## Project info
+![FoodLoops Banner](public/mandala_background.jpg)
 
-**URL**: https://lovable.dev/projects/ca447676-1096-414f-ae79-a476325f75b9
+FoodLoops is a dynamic web application designed to combat food waste by connecting sellers of surplus food with conscientious buyers. Leveraging a dynamic pricing model, prices for items decrease as their expiration dates approach, ensuring that food gets sold rather than discarded.
 
-## How can I edit this code?
+## ✨ Key Features
 
-There are several ways of editing your application.
+- **Dynamic Pricing**: An intelligent algorithm automatically reduces item prices as they near their expiration date, maximizing the chance of a sale.
+- **Dual User Roles**: Caters to both **Buyers** looking for great deals and **Sellers** (restaurants, bakeries, etc.) wanting to reduce surplus inventory.
+- **Eco-Dashboard**: A personalized dashboard for users to track their positive environmental impact, including money saved, CO₂ emissions reduced, and water conserved.
+- **Community Hub**: A social space for users to connect, share recipes, and exchange food-saving tips.
+- **Web3 Integration**: Secure, decentralized authentication using [Civic Pass](https://www.civic.com/) and blockchain integration for future rewards and transactions.
+- **Comprehensive Backend**: A robust Node.js/Express server to manage users, products, and orders.
 
-**Use Lovable**
+## 🛠️ Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ca447676-1096-414f-ae79-a476325f75b9) and start prompting.
+- **Frontend**: React, Vite, TypeScript, Tailwind CSS, Shadcn/UI
+- **State Management**: TanStack Query
+- **Web3**: Wagmi, Ethers.js, Civic Auth, WalletConnect
+- **Backend**: Node.js, Express, MongoDB, Mongoose
+- **Blockchain**:
+    - **Rewards**: Solidity (Ethereum)
+    - **Core Logic (WIP)**: Move (Aptos)
+- **Tooling**: Hardhat, Vercel, ESLint, Prettier
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Getting Started
 
-**Use your preferred IDE**
+Follow these instructions to get the FoodLoops application running on your local machine.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- [Node.js](https://nodejs.org/) (v18 or later)
+- [npm](https://www.npmjs.com/)
+- [MongoDB](https://www.mongodb.com/try/download/community) installed and running.
 
-Follow these steps:
+### 1. Clone the Repository
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+cd foodloops-web
 ```
 
-**Edit a file directly in GitHub**
+### 2. Set Up Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The project uses environment variables for configuration. Create a `.env` file in the root of the project and add the following:
 
-**Use GitHub Codespaces**
+```env
+# Get a free Project ID at https://cloud.walletconnect.com/
+VITE_WALLETCONNECT_PROJECT_ID=
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# You can get this from the Civic developer portal
+VITE_CIVIC_CLIENT_ID=584fc3e9-922e-4b13-95af-cd0a9ea42ba2
+```
 
-## What technologies are used for this project?
+The server also requires environment variables. Create a `.env` file in the `server/` directory:
+```env
+# Your MongoDB connection string
+MONGODB_URI=mongodb://localhost:27017/foodloops
 
-This project is built with:
+# A secret for signing JWTs (optional for local dev)
+JWT_SECRET=your-jwt-secret
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3. Install Dependencies
 
-## How can I deploy this project?
+This project is a monorepo-style setup with separate dependencies for the root (frontend) and the server (backend).
 
-Simply open [Lovable](https://lovable.dev/projects/ca447676-1096-414f-ae79-a476325f75b9) and click on Share -> Publish.
+```bash
+# Install frontend dependencies
+npm install
 
-## Can I connect a custom domain to my Lovable project?
+# Install backend dependencies
+cd server
+npm install
+cd ..
+```
 
-Yes, you can!
+### 4. Run the Application
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+To run both the frontend and backend servers concurrently, use the `dev:full` script from the root directory.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```bash
+npm run dev:full
+```
+This will:
+- Start the Vite frontend development server on `http://localhost:5173` (or the next available port).
+- Start the Express backend server on `http://localhost:3001`.
+
+## 📜 Available Scripts
+
+### Root (`package.json`)
+- `dev`: Starts the Vite frontend server.
+- `build`: Builds the frontend for production.
+- `build:dev`: Builds the frontend in development mode.
+- `lint`: Lints the codebase.
+- `server`: Starts the backend server directly.
+- `dev:full`: Starts both frontend and backend servers concurrently.
+
+### Server (`server/package.json`)
+- `dev`: Starts the backend server with `nodemon` for auto-reloading.
+- `start`: Starts the backend server.
+- `seed`: Seeds the database with initial data.
+- `update-prices`: Runs the script to update product prices based on the dynamic pricing model.
+
+---
+
+This project was bootstrapped with [Lovable](https://lovable.dev).
