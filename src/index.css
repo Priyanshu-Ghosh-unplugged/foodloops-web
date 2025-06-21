@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
@@ -16,10 +17,16 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/mandala_background.jpg');
-    background-size: 500px;
-    opacity: 0.1;
+    background-image: url('/lovable-uploads/f563775a-a0d7-4ba9-95c9-ab56d25a1b68.png');
+    background-size: 400px 400px;
+    background-repeat: repeat;
+    opacity: 0.08;
     z-index: -1;
+    pointer-events: none;
+  }
+
+  .dark body::before {
+    opacity: 0.12;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -52,6 +59,11 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    
+    /* Custom brass gradient colors */
+    --brass-start: 45 100% 51%;
+    --brass-mid: 38 92% 50%;
+    --brass-end: 45 100% 35%;
   }
 
   .dark {
@@ -94,7 +106,26 @@
   }
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Custom brass gradient */
+.bg-brass-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--brass-start)) 0%, 
+    hsl(var(--brass-mid)) 50%, 
+    hsl(var(--brass-end)) 100%);
+}
+
+/* Enhanced button with glow effect */
+.btn-brass {
+  @apply bg-brass-gradient text-white font-medium rounded-xl px-6 py-3 transition-all duration-300;
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
+
+.btn-brass:hover {
+  box-shadow: 0 8px 25px rgba(251, 191, 36, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -106,68 +137,53 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(251, 191, 36, 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(251, 191, 36, 0.8);
 }
 
-/* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(251, 191, 36, 0.4);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(251, 191, 36, 0.6);
 }
 
-/* Smooth transitions for theme switching */
-* {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+/* Icon styling */
+.icon-gold {
+  color: hsl(45 100% 51%);
+  stroke-width: 1.5;
 }
 
-/* Gradient backgrounds for cards */
-.gradient-card {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 146, 60, 0.1) 100%);
+/* Card enhancements */
+.glass-card {
+  @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-amber-100 dark:border-gray-700/50;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.dark .gradient-card {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+.glass-card:hover {
+  @apply shadow-lg;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
 }
 
-/* Enhanced button animations */
-.button-glow {
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
-  transition: box-shadow 0.3s ease;
+/* Profile section styling */
+.profile-section {
+  @apply glass-card rounded-2xl p-8;
 }
 
-.button-glow:hover {
-  box-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+.stat-card {
+  @apply glass-card rounded-xl p-6 text-center hover:scale-105 transition-all duration-300;
 }
 
-/* Loading animations */
-@keyframes shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.dark .shimmer {
-  background: linear-gradient(90deg, #374151 25%, #4b5563 37%, #374151 63%);
-  background-size: 200px 100%;
+/* Footer styling */
+.footer-section {
+  @apply bg-gradient-to-r from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900;
 }

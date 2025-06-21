@@ -1,3 +1,4 @@
+
 import { WagmiProvider } from "wagmi";
 import { wagmiConfig } from "./config/wagmi";
 import { Toaster } from "@/components/ui/sonner";
@@ -16,6 +17,7 @@ import Products from "./pages/Products";
 import Community from "./pages/Community";
 import SellerDashboard from "./pages/SellerDashboard";
 import Reviews from "./pages/Reviews";
+import Profile from "./pages/Profile";
 import CartPage from "./pages/CartPage";
 import TransactionPage from './pages/TransactionPage';
 import CivicAuthDemo from './pages/CivicAuthDemo';
