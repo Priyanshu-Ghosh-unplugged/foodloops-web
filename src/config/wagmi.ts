@@ -7,7 +7,7 @@ export const wagmiConfig = createConfig({
   connectors: [
     metaMask(),
     walletConnect({
-      projectId: process.env.VITE_WEB3MODAL_PROJECT_ID || 'your-project-id',
+      projectId: 'your-project-id',
     }),
     coinbaseWallet({
       appName: 'FoodLoops',

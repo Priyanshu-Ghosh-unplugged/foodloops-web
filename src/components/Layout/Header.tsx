@@ -33,9 +33,6 @@ const Header = () => {
             <span className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               FoodLoops
             </span>
-            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
-              Reduce Waste
-            </Badge>
           </Link>
 
           {/* Navigation */}
