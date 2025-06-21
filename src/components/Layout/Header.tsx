@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { WalletConnect } from './WalletConnect';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -63,6 +63,12 @@ const Header = () => {
             >
               Community
             </Link>
+            <Link 
+              to="/reviews" 
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
+              Reviews
+            </Link>
             {user && (
               <Link 
                 to="/seller" 
@@ -75,6 +81,9 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            {/* Wallet Connection */}
+            <WalletConnect />
+            
             {/* Theme Toggle */}
             <Button
               variant="ghost"
