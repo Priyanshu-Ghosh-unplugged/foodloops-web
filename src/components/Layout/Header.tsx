@@ -9,13 +9,13 @@ import {
   ShoppingCart,
   User
 } from 'lucide-react';
-import { useCivicAuth } from '@/contexts/CivicAuthContext';
+import { useUser, UserButton } from '@civic/auth-web3/react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCart } from '@/contexts/CartContext';
 import { WalletConnect } from './WalletConnect';
 
 const Header = () => {
-  const { user, isAuthenticated, logout } = useCivicAuth();
+  const { user } = useUser();
   const { isDark, toggleTheme } = useTheme();
   const { items } = useCart();
 
@@ -64,7 +64,7 @@ const Header = () => {
             >
               Reviews
             </Link>
-            {isAuthenticated && user?.user_type === 'seller' && (
+            {user && (user as any).user_type === 'seller' && (
               <Link 
                 to="/seller" 
                 className="text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors font-medium"
@@ -108,28 +108,8 @@ const Header = () => {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             
-            {/* Profile Button */}
-            {isAuthenticated && user && (
-              <Link to="/profile">
-                <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400">
-                  <User className="w-4 h-4 mr-1" />
-                  {user.name}
-                </Button>
-              </Link>
-            )}
-            
-            {/* Auth Button */}
-            {!isAuthenticated ? (
-              <Link to="/civic-auth">
-                <Button variant="outline" size="sm">
-                  Login
-                </Button>
-              </Link>
-            ) : (
-              <Button variant="outline" size="sm" onClick={logout}>
-                Logout
-              </Button>
-            )}
+            {/* Profile & Auth Button */}
+            <UserButton />
           </div>
         </div>
       </div>

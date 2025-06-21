@@ -1,11 +1,4 @@
-// Fallback for when ethers is not installed
-let ethers: any = null;
-try {
-  ethers = require('ethers');
-} catch (error) {
-  console.warn('ethers library not installed. Ethereum functionality will be disabled.');
-}
-
+import { BrowserProvider, Contract, formatEther, formatUnits, parseUnits } from 'ethers';
 import { config } from '@/config/env';
 
 // Rewards Contract ABI - Basic ERC20 and rewards functionality
@@ -55,15 +48,11 @@ export interface RewardsStats {
 }
 
 class EthereumClient {
-  private provider: any = null;
+  private provider: BrowserProvider | null = null;
   private signer: any = null;
-  private contract: any = null;
+  private contract: Contract | null = null;
 
   async connect(): Promise<string> {
-    if (!ethers) {
-      throw new Error('ethers library not installed. Please install ethers to use Ethereum functionality.');
-    }
-
     try {
       // Check if MetaMask is installed
       if (!window.ethereum) {
@@ -75,7 +64,7 @@ class EthereumClient {
       const account = accounts[0];
 
       // Create provider and signer
-      this.provider = new ethers.BrowserProvider(window.ethereum);
+      this.provider = new BrowserProvider(window.ethereum);
       this.signer = await this.provider.getSigner();
 
       // Check if we're on the correct network
@@ -86,7 +75,7 @@ class EthereumClient {
 
       // Initialize contract
       if (config.rewardsContractAddress) {
-        this.contract = new ethers.Contract(
+        this.contract = new Contract(
           config.rewardsContractAddress,
           REWARDS_CONTRACT_ABI,
           this.signer
@@ -159,29 +148,23 @@ class EthereumClient {
   }
 
   async getBalance(address?: string): Promise<string> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.provider) throw new Error('Provider not connected');
     
     const targetAddress = address || await this.getAccount();
     if (!targetAddress) throw new Error('No address provided');
     
     const balance = await this.provider.getBalance(targetAddress);
-    return ethers.formatEther(balance);
+    return formatEther(balance);
   }
 
   async getTokenBalance(address?: string): Promise<number> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.contract) throw new Error('Contract not initialized');
     
     const targetAddress = address || await this.getAccount();
     if (!targetAddress) throw new Error('No address provided');
     
     const balance = await this.contract.balanceOf(targetAddress);
-    return parseFloat(ethers.formatUnits(balance, 18));
+    return parseFloat(formatUnits(balance, 18));
   }
 
   async getUserRewards(address?: string): Promise<UserRewards> {
@@ -198,9 +181,9 @@ class EthereumClient {
       ]);
 
       return {
-        balance: parseFloat(ethers.formatUnits(balance, 18)),
-        totalEarned: parseFloat(ethers.formatUnits(totalEarned, 18)),
-        pendingRewards: parseFloat(ethers.formatUnits(pendingRewards, 18)),
+        balance: parseFloat(formatUnits(balance, 18)),
+        totalEarned: parseFloat(formatUnits(totalEarned, 18)),
+        pendingRewards: parseFloat(formatUnits(pendingRewards, 18)),
         history: [], // This would need to be implemented based on contract events
       };
     } catch (error) {
@@ -215,9 +198,6 @@ class EthereumClient {
   }
 
   async claimRewards(): Promise<string> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.contract) throw new Error('Contract not initialized');
     if (!this.signer) throw new Error('Signer not connected');
 
@@ -232,14 +212,11 @@ class EthereumClient {
   }
 
   async transferRewards(to: string, amount: number): Promise<string> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.contract) throw new Error('Contract not initialized');
     if (!this.signer) throw new Error('Signer not connected');
 
     try {
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
+      const amountWei = parseUnits(amount.toString(), 18);
       const tx = await this.contract.transfer(to, amountWei);
       const receipt = await tx.wait();
       return receipt.hash;
@@ -250,9 +227,6 @@ class EthereumClient {
   }
 
   async getRewardsStats(): Promise<RewardsStats> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.contract) throw new Error('Contract not initialized');
 
     try {
@@ -262,8 +236,8 @@ class EthereumClient {
       ]);
 
       return {
-        totalSupply: parseFloat(ethers.formatUnits(totalSupply, 18)),
-        totalDistributed: parseFloat(ethers.formatUnits(totalDistributed, 18)),
+        totalSupply: parseFloat(formatUnits(totalSupply, 18)),
+        totalDistributed: parseFloat(formatUnits(totalDistributed, 18)),
         totalUsers: 0, // This would need to be tracked separately or via events
         averageReward: 0, // This would need to be calculated
       };
@@ -279,14 +253,11 @@ class EthereumClient {
   }
 
   async mintReward(to: string, amount: number): Promise<string> {
-    if (!ethers) {
-      throw new Error('ethers library not installed');
-    }
     if (!this.contract) throw new Error('Contract not initialized');
     if (!this.signer) throw new Error('Signer not connected');
 
     try {
-      const amountWei = ethers.parseUnits(amount.toString(), 18);
+      const amountWei = parseUnits(amount.toString(), 18);
       const tx = await this.contract.mintReward(to, amountWei);
       const receipt = await tx.wait();
       return receipt.hash;
@@ -297,10 +268,10 @@ class EthereumClient {
   }
 
   isConnected(): boolean {
-    return !!this.signer && !!this.contract;
+    return !!this.signer;
   }
 
-  getProvider(): any {
+  getProvider(): BrowserProvider | null {
     return this.provider;
   }
 
@@ -308,17 +279,15 @@ class EthereumClient {
     return this.signer;
   }
 
-  getContract(): any {
+  getContract(): Contract | null {
     return this.contract;
   }
 }
 
-// Create and export a singleton instance
-export const ethereumClient = new EthereumClient();
-
-// Add ethereum to window type
 declare global {
   interface Window {
     ethereum?: any;
   }
-} 
+}
+
+export const ethereumClient = new EthereumClient(); 

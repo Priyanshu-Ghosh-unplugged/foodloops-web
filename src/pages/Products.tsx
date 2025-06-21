@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Header from '@/components/Layout/Header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,12 @@ import { useCart } from '@/contexts/CartContext';
 
 // Types
 type ProductCategory = 'dairy' | 'bakery' | 'meat' | 'produce' | 'pantry' | 'frozen' | 'beverages' | 'other';
+
+const mockRecommendedProducts: Product[] = [
+    { _id: 'prod-2', name: 'Sourdough Bread', price: 220, original_price: 440, expiry_date: new Date().toISOString(), category: 'bakery', image_url: '/placeholder.svg', store_name: 'Community Co-op', description: 'Freshly baked sourdough', quantity_available: 10, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),},
+    { _id: 'prod-3', name: 'Avocados (Bag of 4)', price: 240, original_price: 480, expiry_date: new Date().toISOString(), category: 'produce', image_url: '/placeholder.svg', store_name: "Priyan's Fresh Finds", description: 'Ripe and ready avocados', quantity_available: 15, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
+    { _id: 'prod-1', name: 'Organic Milk', price: 160, original_price: 320, expiry_date: new Date().toISOString(), category: 'dairy', image_url: '/placeholder.svg', store_name: "Priyan's Fresh Finds", description: '1L of organic milk', quantity_available: 20, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
+];
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -49,8 +55,8 @@ const ProductsPage = () => {
     queryKey: ['products', selectedCategory, sortBy, sortOrder, currentPage, searchTerm],
     queryFn: () => apiClient.getProducts({
       category: selectedCategory !== 'all' ? selectedCategory : undefined,
-      sortBy,
-      sortOrder,
+      sort_by: sortBy as any,
+      sort_order: sortOrder,
       page: currentPage,
       limit: 12,
       search: searchTerm || undefined
@@ -81,17 +87,16 @@ const ProductsPage = () => {
       addItem({
         id: product._id,
         name: product.name,
-        current_price: product.current_price,
+        current_price: product.price,
         original_price: product.original_price,
-        discount_percentage: product.discount_percentage,
+        discount_percentage: Math.round(((product.original_price - product.price) / product.original_price) * 100),
         expiry_date: product.expiry_date,
         category: product.category,
         image_url: product.image_url || null,
         stores: {
           name: product.store_name,
-          address: product.store_address
-        },
-        quantity: 1
+          address: ''
+        }
       });
       toast.success('Added to cart!');
     } catch (error) {
@@ -143,8 +148,11 @@ const ProductsPage = () => {
                 Find quality products at great prices and help reduce waste.
               </p>
             </div>
+            {/* Recommended Products */}
+            <RecommendedProductsSection products={mockRecommendedProducts} onPurchase={handlePurchase} />
+
             {/* Filters and Search */}
-        <Card className="mb-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
+        <Card className="my-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search */}
@@ -239,7 +247,7 @@ const ProductsPage = () => {
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
                       <Badge className="absolute top-2 right-2 bg-green-500 text-white">
-                        {product.discount_percentage}% OFF
+                        {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
                       </Badge>
                       <Badge className={`absolute top-2 left-2 ${getExpiryBadgeColor(daysUntilExpiry)}`}>
                         {daysUntilExpiry <= 0 ? 'Expired' : `${daysUntilExpiry} day${daysUntilExpiry !== 1 ? 's' : ''} left`}
@@ -261,7 +269,7 @@ const ProductsPage = () => {
                       <div className="flex justify-between items-center mb-3">
                         <div>
                           <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                            ₹{product.current_price.toFixed(2)}
+                            ₹{product.price.toFixed(2)}
                           </span>
                           <span className="line-through text-sm text-gray-500 dark:text-gray-400 ml-2">
                             ₹{product.original_price.toFixed(2)}
@@ -315,5 +323,42 @@ const ProductsPage = () => {
     </div>
   );
 };
+
+const RecommendedProductsSection = ({ products, onPurchase }: { products: Product[], onPurchase: (product: Product) => void }) => (
+    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-amber-100 dark:border-gray-700">
+        <CardHeader>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Recommended For You</h2>
+            <p className="text-gray-600 dark:text-gray-400">Fresh deals we think you'll like.</p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {products.map(product => (
+                <div key={product._id} className="border border-amber-200 dark:border-gray-600 rounded-lg p-3 bg-white/50 dark:bg-gray-700/50 hover:shadow-md transition-all duration-200">
+                    <img 
+                        src={product.image_url || '/placeholder.svg'} 
+                        alt={product.name}
+                        className="w-full h-32 object-cover rounded-md mb-3"
+                    />
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200">{product.name}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{product.store_name}</p>
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">₹{product.price.toFixed(2)}</span>
+                        <span className="line-through text-sm text-gray-500 dark:text-gray-400">₹{product.original_price.toFixed(2)}</span>
+                    </div>
+                    <Badge variant="secondary" className="mb-3 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                        {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
+                    </Badge>
+                    <Button 
+                        size="sm" 
+                        className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600" 
+                        onClick={() => onPurchase(product)}
+                    >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Add to Cart
+                    </Button>
+                </div>
+            ))}
+        </CardContent>
+    </Card>
+);
 
 export default ProductsPage;

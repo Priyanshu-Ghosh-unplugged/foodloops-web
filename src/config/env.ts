@@ -4,7 +4,7 @@ export const config = {
   geminiApiUrl: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
   
   // API Configuration
-  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
   
   // MongoDB Configuration
   mongodbUri: import.meta.env.VITE_MONGODB_URI || 'mongodb://localhost:27017/foodloops',
