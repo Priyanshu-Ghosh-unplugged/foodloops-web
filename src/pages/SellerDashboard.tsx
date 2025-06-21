@@ -43,14 +43,19 @@ const SellerDashboard = () => {
     description: '',
     address: '',
     phone: '',
-    email: ''
+    email: '',
+    operating_hours: {
+      open: '09:00',
+      close: '18:00',
+      days_open: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    }
   });
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
     category: 'other' as ProductCategory,
     original_price: '',
-    current_price: '',
+    price: '',
     expiry_date: '',
     quantity_available: '1',
     image_url: ''
@@ -71,18 +76,20 @@ const SellerDashboard = () => {
   const sellerId = 'seller_001';
 
   // Fetch stores
-  const { data: stores = [], isLoading: storesLoading } = useQuery({
+  const { data: storesData, isLoading: storesLoading } = useQuery({
     queryKey: ['stores', sellerId],
     queryFn: () => apiClient.getStores({ seller_id: sellerId }),
     enabled: !!sellerId
   });
+  const stores = storesData?.stores || [];
 
   // Fetch products for active store
-  const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['products', sellerId],
-    queryFn: () => apiClient.getProductsBySeller(sellerId),
-    enabled: !!sellerId && !!activeStore
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ['products', activeStore?._id],
+    queryFn: () => apiClient.getProducts({ store_id: activeStore?._id }),
+    enabled: !!activeStore
   });
+  const products = productsData?.products || [];
 
   // Set active store when stores are loaded
   useEffect(() => {
@@ -93,12 +100,14 @@ const SellerDashboard = () => {
 
   // Create store mutation
   const createStoreMutation = useMutation({
-    mutationFn: (storeData: Omit<StoreType, '_id' | 'created_at' | 'updated_at'>) => 
-      apiClient.createStore(storeData),
+    mutationFn: (storeData: any) => apiClient.createStore(storeData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stores', sellerId] });
       setIsStoreModalOpen(false);
-      setNewStore({ name: '', description: '', address: '', phone: '', email: '' });
+      setNewStore({
+        name: '', description: '', address: '', phone: '', email: '',
+        operating_hours: { open: '09:00', close: '18:00', days_open: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] }
+      });
       toast.success('Store created successfully!');
     },
     onError: (error) => {
@@ -109,20 +118,13 @@ const SellerDashboard = () => {
 
   // Create product mutation
   const createProductMutation = useMutation({
-    mutationFn: (productData: Omit<ProductType, '_id' | 'created_at' | 'updated_at'>) => 
-      apiClient.createProduct(productData),
+    mutationFn: (productData: any) => apiClient.createProduct(productData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products', sellerId] });
+      queryClient.invalidateQueries({ queryKey: ['products', activeStore?._id] });
       setIsProductModalOpen(false);
-      setNewProduct({ 
-        name: '', 
-        description: '', 
-        category: 'other', 
-        original_price: '', 
-        current_price: '',
-        expiry_date: '', 
-        quantity_available: '1',
-        image_url: ''
+      setNewProduct({
+        name: '', description: '', category: 'other', original_price: '', price: '',
+        expiry_date: '', quantity_available: '1', image_url: ''
       });
       toast.success('Product created successfully!');
     },
@@ -134,7 +136,7 @@ const SellerDashboard = () => {
 
   const handleCreateStore = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.name) {
+    if (!user?.name || !user?.email) {
       toast.error('User information not available');
       return;
     }
@@ -142,11 +144,22 @@ const SellerDashboard = () => {
     createStoreMutation.mutate({
       name: newStore.name,
       description: newStore.description,
-      address: newStore.address,
-      phone: newStore.phone || undefined,
-      email: newStore.email || undefined,
       seller_id: sellerId,
-      seller_name: user.name
+      seller_name: user.name,
+      seller_email: user.email,
+      location: {
+        type: 'Point',
+        coordinates: [0, 0], // Placeholder
+        address: newStore.address,
+      },
+      contact: {
+        phone: newStore.phone,
+        email: newStore.email
+      },
+      operating_hours: newStore.operating_hours,
+      rating: 0,
+      review_count: 0,
+      total_products: 0
     });
   };
 
@@ -158,28 +171,29 @@ const SellerDashboard = () => {
     }
 
     const originalPrice = parseFloat(newProduct.original_price);
-    const currentPrice = parseFloat(newProduct.current_price);
+    const price = parseFloat(newProduct.price);
 
-    if (currentPrice >= originalPrice) {
+    if (price >= originalPrice) {
       toast.error('Current price must be less than original price');
       return;
     }
 
     createProductMutation.mutate({
       name: newProduct.name,
-      description: newProduct.description || undefined,
-      category: newProduct.category,
+      description: newProduct.description,
+      price: price,
       original_price: originalPrice,
-      current_price: currentPrice,
-      expiry_date: newProduct.expiry_date,
+      category: newProduct.category,
+      image_url: newProduct.image_url,
       quantity_available: parseInt(newProduct.quantity_available),
-      image_url: newProduct.image_url || undefined,
+      expiry_date: newProduct.expiry_date,
+      store_id: activeStore._id,
       seller_id: sellerId,
       seller_name: user.name,
       store_name: activeStore.name,
-      store_address: activeStore.address,
-      store_phone: activeStore.phone,
-      store_email: activeStore.email
+      location: activeStore.location,
+      rating: 0,
+      review_count: 0,
     });
   };
 
@@ -253,6 +267,7 @@ const SellerDashboard = () => {
                         value={newStore.address} 
                         onChange={e => setNewStore({...newStore, address: e.target.value})} 
                         required 
+                        placeholder="123 Main St, Anytown, USA"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -262,6 +277,7 @@ const SellerDashboard = () => {
                           id="store-phone" 
                           value={newStore.phone} 
                           onChange={e => setNewStore({...newStore, phone: e.target.value})} 
+                          placeholder="555-123-4567"
                         />
                       </div>
                       <div className="space-y-1">
@@ -271,6 +287,7 @@ const SellerDashboard = () => {
                           type="email" 
                           value={newStore.email} 
                           onChange={e => setNewStore({...newStore, email: e.target.value})} 
+                          placeholder="contact@store.com"
                         />
                       </div>
                     </div>
@@ -282,57 +299,45 @@ const SellerDashboard = () => {
               </Dialog>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stores.map((store) => (
-                <Card key={store._id} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-amber-100 dark:border-gray-700">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-gray-800 dark:text-gray-200">{store.name}</CardTitle>
-                        <CardDescription className="text-gray-600 dark:text-gray-400">
-                          {store.address}
-                        </CardDescription>
+            {stores.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p>You haven't created any stores yet. Add one to get started!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {stores.map(store => (
+                  <Card
+                    key={store._id}
+                    className={`cursor-pointer ${activeStore?._id === store._id ? 'border-amber-500' : ''}`}
+                    onClick={() => setActiveStore(store)}
+                  >
+                    <CardHeader>
+                      <CardTitle>{store.name}</CardTitle>
+                      <CardDescription>{store.location.address}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p>{store.description}</p>
+                      <div className="text-sm text-gray-500 mt-4">
+                        <p>Phone: {store.contact.phone}</p>
+                        <p>Email: {store.contact.email}</p>
                       </div>
-                      <Badge variant={store.is_verified ? "default" : "secondary"}>
-                        {store.is_verified ? 'Verified' : 'Pending'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {store.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        {store.description}
-                      </p>
-                    )}
-                    <div className="space-y-2 text-sm">
-                      {store.phone && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500">Phone:</span>
-                          <span className="text-gray-700 dark:text-gray-300">{store.phone}</span>
-                        </div>
-                      )}
-                      {store.email && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500">Email:</span>
-                          <span className="text-gray-700 dark:text-gray-300">{store.email}</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="products" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Your Products</h2>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                Products in {activeStore ? activeStore.name : 'Your Store'}
+              </h2>
               <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
                 <DialogTrigger asChild>
-                  <Button 
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-                    disabled={!activeStore}
-                  >
+                  <Button disabled={!activeStore}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Product
                   </Button>
@@ -340,159 +345,131 @@ const SellerDashboard = () => {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add New Product</DialogTitle>
-                    <DialogDescription>Fill in the product details to list it in your store.</DialogDescription>
+                    <DialogDescription>
+                      Add a new product to your store: {activeStore?.name}
+                    </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreateProduct} className="space-y-4 pt-4">
                     <div className="space-y-1">
-                      <Label htmlFor="prod-name">Product Name</Label>
-                      <Input 
-                        id="prod-name" 
-                        value={newProduct.name} 
-                        onChange={e => setNewProduct({...newProduct, name: e.target.value})} 
-                        required 
+                      <Label htmlFor="product-name">Product Name</Label>
+                      <Input
+                        id="product-name"
+                        value={newProduct.name}
+                        onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
+                        required
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="prod-desc">Description</Label>
-                      <Textarea 
-                        id="prod-desc" 
-                        value={newProduct.description} 
-                        onChange={e => setNewProduct({...newProduct, description: e.target.value})} 
+                      <Label htmlFor="product-desc">Description</Label>
+                      <Textarea
+                        id="product-desc"
+                        value={newProduct.description}
+                        onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <Label htmlFor="prod-category">Category</Label>
-                        <Select value={newProduct.category} onValueChange={value => setNewProduct({...newProduct, category: value as ProductCategory})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                          </SelectContent>
+                    <div className="space-y-1">
+                        <Label htmlFor="product-category">Category</Label>
+                        <Select
+                            value={newProduct.category}
+                            onValueChange={(value: ProductCategory) => setNewProduct({ ...newProduct, category: value })}
+                        >
+                            <SelectTrigger id="product-category">
+                                <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                                ))}
+                            </SelectContent>
                         </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="prod-quantity">Quantity</Label>
-                        <Input 
-                          id="prod-quantity" 
-                          type="number" 
-                          min="1"
-                          value={newProduct.quantity_available} 
-                          onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})} 
-                          required 
-                        />
-                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="original-price">Original Price (₹)</Label>
+                            <Input
+                                id="original-price"
+                                type="number"
+                                value={newProduct.original_price}
+                                onChange={e => setNewProduct({ ...newProduct, original_price: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="current-price">Current Price (₹)</Label>
+                            <Input
+                                id="current-price"
+                                type="number"
+                                value={newProduct.price}
+                                onChange={e => setNewProduct({ ...newProduct, price: e.target.value })}
+                                required
+                            />
+                        </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <Label htmlFor="prod-original-price">Original Price (₹)</Label>
-                        <Input 
-                          id="prod-original-price" 
-                          type="number" 
-                          step="0.01" 
-                          min="0"
-                          value={newProduct.original_price} 
-                          onChange={e => setNewProduct({...newProduct, original_price: e.target.value})} 
-                          required 
+                        <Label htmlFor="product-quantity">Quantity</Label>
+                        <Input
+                          id="product-quantity"
+                          type="number"
+                          value={newProduct.quantity_available}
+                          onChange={e => setNewProduct({ ...newProduct, quantity_available: e.target.value })}
+                          required
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="prod-current-price">Current Price (₹)</Label>
-                        <Input 
-                          id="prod-current-price" 
-                          type="number" 
-                          step="0.01" 
-                          min="0"
-                          value={newProduct.current_price} 
-                          onChange={e => setNewProduct({...newProduct, current_price: e.target.value})} 
-                          required 
-                        />
+                          <Label htmlFor="product-expiry">Expiry Date</Label>
+                          <Input
+                              id="product-expiry"
+                              type="date"
+                              value={newProduct.expiry_date}
+                              onChange={e => setNewProduct({ ...newProduct, expiry_date: e.target.value })}
+                              required
+                          />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="prod-expiry">Expiry Date</Label>
-                      <Input 
-                        id="prod-expiry" 
-                        type="datetime-local" 
-                        value={newProduct.expiry_date} 
-                        onChange={e => setNewProduct({...newProduct, expiry_date: e.target.value})} 
-                        required 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="prod-image">Image URL (optional)</Label>
-                      <Input 
-                        id="prod-image" 
-                        type="url" 
-                        value={newProduct.image_url} 
-                        onChange={e => setNewProduct({...newProduct, image_url: e.target.value})} 
-                      />
+                        <Label htmlFor="product-image">Image URL</Label>
+                        <Input
+                            id="product-image"
+                            value={newProduct.image_url}
+                            onChange={e => setNewProduct({ ...newProduct, image_url: e.target.value })}
+                            placeholder="https://example.com/image.png"
+                        />
                     </div>
                     <Button type="submit" className="w-full" disabled={createProductMutation.isPending}>
-                      {createProductMutation.isPending ? 'Creating...' : 'Create Product'}
+                      {createProductMutation.isPending ? 'Adding...' : 'Add Product'}
                     </Button>
                   </form>
                 </DialogContent>
               </Dialog>
             </div>
-
+            
             {productsLoading ? (
-              <div className="text-center">Loading products...</div>
+              <p>Loading products...</p>
             ) : products.length === 0 ? (
-              <Card className="text-center py-12 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-amber-100 dark:border-gray-700">
-                <CardContent>
-                  <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No products yet</h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">Start by adding your first product</p>
-                  <Button onClick={() => setIsProductModalOpen(true)}>Add Product</Button>
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p>No products found for this store. Add one to get started!</p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
-                  <Card key={product._id} className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-amber-100 dark:border-gray-700">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {products.map(product => (
+                  <Card key={product._id}>
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-gray-800 dark:text-gray-200">{product.name}</CardTitle>
-                          <CardDescription className="text-gray-600 dark:text-gray-400">
-                            {product.category}
-                          </CardDescription>
-                        </div>
-                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                          {product.status}
-                        </Badge>
-                      </div>
+                      <CardTitle>{product.name}</CardTitle>
+                      <CardDescription>
+                        <Badge>{product.category}</Badge>
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">Price:</span>
-                          <div className="text-right">
-                            <div className="font-bold text-green-600 dark:text-green-400">
-                              ₹{product.current_price.toFixed(2)}
-                            </div>
-                            <div className="text-sm line-through text-gray-500">
-                              ₹{product.original_price.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">Quantity:</span>
-                          <span className="text-sm font-medium">{product.quantity_available}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">Discount:</span>
-                          <span className="text-sm font-medium text-green-600">{product.discount_percentage}%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">Expires:</span>
-                          <span className="text-sm font-medium">
-                            {new Date(product.expiry_date).toLocaleDateString()}
-                          </span>
-                        </div>
+                      <img src={product.image_url || '/placeholder.svg'} alt={product.name} className="w-full h-32 object-cover rounded-md mb-4" />
+                      <div className="flex justify-between items-center font-bold">
+                        <p className="text-xl text-green-600">₹{product.price}</p>
+                        <p className="text-sm text-gray-500 line-through">₹{product.original_price}</p>
                       </div>
+                      <p className="text-sm text-gray-500">Expires: {new Date(product.expiry_date).toLocaleDateString()}</p>
+                      <p className="text-sm">Quantity: {product.quantity_available}</p>
                     </CardContent>
                   </Card>
                 ))}
