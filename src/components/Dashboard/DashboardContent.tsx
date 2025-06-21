@@ -51,7 +51,7 @@ const mockRecommendedProducts: Product[] = [
 
 
 const DashboardContent = () => {
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
   const [ecoScore, setEcoScore] = useState<EcoScore | null>(null);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
 
@@ -63,7 +63,7 @@ const DashboardContent = () => {
   const handlePurchase = async (productId: string, price: number) => {
     const product = recommendedProducts.find(p => p.id === productId);
     if (product) {
-      addItem(product);
+      addToCart(product);
       toast.success('Added to cart!');
     }
   };
