@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CivicAuthProvider } from '@civic/auth-web3/react';
+import { CivicAuthProvider } from '@/contexts/CivicAuthContext';
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { EthereumWalletProvider } from "@/contexts/EthereumWalletContext";
@@ -21,14 +21,11 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
-// Your Civic Client ID
-const civicClientId = '584fc3e9-922e-4b13-95af-cd0a9ea42ba2';
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-        <CivicAuthProvider clientId={civicClientId}>
+        <CivicAuthProvider>
           <WalletProvider>
             <EthereumWalletProvider>
               <CartProvider>
