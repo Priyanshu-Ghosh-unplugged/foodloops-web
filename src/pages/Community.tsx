@@ -1,214 +1,179 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { ThumbsUp, MessageSquare, Send } from 'lucide-react';
+import { ThumbsUp, MessageSquare } from 'lucide-react';
 import { useUser } from '@civic/auth-web3/react';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import DashboardLayout from '@/components/Layout/DashboardLayout';
 
 // Mock data and functions
 const mockPosts = [
   {
     id: 1,
-    content: 'Welcome to the FoodLoops community! Share your tips on reducing food waste.',
-    author_id: 'system',
-    created_at: new Date().toISOString(),
-    likes: 5,
-    user: { name: 'FoodLoops Bot' },
+    user: { name: 'Alice', avatarUrl: '/placeholder.svg' },
+    timestamp: '2 hours ago',
+    content: 'Just saved a bunch of vegetables from going to waste! Made a delicious soup. #foodwastehero',
+    likes: 15,
+    liked: false,
     comments: [
-      { id: 1, content: 'Great to be here!', author_id: 'user1', created_at: new Date().toISOString(), user: { name: 'Eco Warrior' } }
-    ]
-  }
+      { id: 1, user: { name: 'Bob', avatarUrl: '/placeholder.svg' }, content: 'That sounds amazing! Recipe?' },
+      { id: 2, user: { name: 'Charlie', avatarUrl: '/placeholder.svg' }, content: 'Inspiring!' },
+    ],
+  },
+  // Add more mock posts if needed
 ];
 
-const getMockPosts = async () => {
-  return Promise.resolve({ data: mockPosts, error: null });
-};
+const CommunityPage = () => {
+    const [posts, setPosts] = useState(mockPosts);
+    const [newPostContent, setNewPostContent] = useState('');
+    const [replyingTo, setReplyingTo] = useState<number | null>(null);
+    const [newComment, setNewComment] = useState('');
 
-const createMockPost = async (content, author_id) => {
-  const newPost = {
-    id: Math.random(),
-    content,
-    author_id,
-    created_at: new Date().toISOString(),
-    likes: 0,
-    user: { name: 'You' }, // Placeholder user
-    comments: []
-  };
-  mockPosts.unshift(newPost);
-  return Promise.resolve({ data: [newPost], error: null });
-};
+    const handleLike = (postId: number) => {
+        setPosts(posts.map(p => p.id === postId ? { ...p, likes: p.liked ? p.likes - 1 : p.likes + 1, liked: !p.liked } : p));
+    };
 
-const Community = () => {
-  const { user } = useUser();
-  const [posts, setPosts] = useState([]);
-  const [newPostContent, setNewPostContent] = useState('');
-  const [loading, setLoading] = useState(false);
+    const handlePostSubmit = () => {
+        if (!newPostContent.trim()) return;
+        const newPost = {
+            id: Date.now(),
+            user: { name: 'You', avatarUrl: '/placeholder.svg' },
+            timestamp: 'Just now',
+            content: newPostContent,
+            likes: 0,
+            liked: false,
+            comments: [],
+        };
+        setPosts([newPost, ...posts]);
+        setNewPostContent('');
+    };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+    const handleCommentSubmit = (postId: number) => {
+        if (!newComment.trim()) return;
+        const newCommentObj = {
+            id: Date.now(),
+            user: { name: 'You', avatarUrl: '/placeholder.svg' },
+            content: newComment,
+        };
+        setPosts(posts.map(p => p.id === postId ? { ...p, comments: [...p.comments, newCommentObj] } : p));
+        setNewComment('');
+        setReplyingTo(null);
+    };
+    
+    const sortedPosts = useMemo(() => {
+        return [...posts].sort((a, b) => b.id - a.id);
+      }, [posts]);
 
-  const fetchPosts = async () => {
-    setLoading(true);
-    // Using mock function
-    const { data, error } = await getMockPosts();
-    if (error) {
-      toast.error('Failed to fetch posts');
-      console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data || []);
-    }
-    setLoading(false);
-  };
-
-  const handleCreatePost = async () => {
-    if (!newPostContent.trim()) {
-      toast.error('Post cannot be empty');
-      return;
-    }
-    if (!user) {
-      toast.error('You must be logged in to post');
-      return;
-    }
-
-    setLoading(true);
-    // Using mock function
-    const { error } = await createMockPost(newPostContent, user.sub);
-    if (error) {
-      toast.error('Failed to create post');
-      console.error('Error creating post:', error);
-    } else {
-      setNewPostContent('');
-      await fetchPosts(); // Refresh posts
-    }
-    setLoading(false);
-  };
-
-  const handleLikePost = async (postId) => {
-    if (!user) {
-      toast.error('You must be logged in to like a post');
-      return;
-    }
-    // This is a placeholder and will not persist
-    toast.info('Liking posts is temporarily disabled.');
-  };
-
-  const handleAddComment = async (postId, commentContent) => {
-    if (!commentContent.trim()) {
-      toast.error('Comment cannot be empty');
-      return;
-    }
-    if (!user) {
-      toast.error('You must be logged in to comment');
-      return;
-    }
-    // This is a placeholder and will not persist
-    toast.info('Commenting is temporarily disabled.');
-  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Community Hub</h1>
+    <DashboardLayout
+      title="Community Hub"
+      description="Connect with fellow FoodLoopers, share tips, and see what's happening."
+    >
+        <div className="space-y-6">
+            {/* Post Input */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Share an Update</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                    <Textarea
+                        placeholder="What's on your mind? Share a recipe, a food-saving tip, or a great find!"
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        rows={3}
+                    />
+                    <Button onClick={handlePostSubmit} className="self-end">
+                        Post
+                    </Button>
+                </CardContent>
+            </Card>
 
-      {/* Create Post */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Share something with the community</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <Textarea
-              placeholder="What's on your mind?"
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              disabled={!user || loading}
-            />
-            <Button onClick={handleCreatePost} disabled={!user || loading} className="self-end">
-              <Send className="w-4 h-4 mr-2" />
-              {loading ? 'Posting...' : 'Post'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Posts */}
-      <div className="space-y-6">
-        {posts.map((post) => (
-          <PostCard 
-            key={post.id} 
-            post={post} 
-            onLike={handleLikePost} 
-            onAddComment={handleAddComment}
-            currentUser={user}
-          />
-        ))}
-        {loading && <p>Loading posts...</p>}
-      </div>
-    </div>
-  );
-};
-
-// PostCard component
-const PostCard = ({ post, onLike, onAddComment, currentUser }) => {
-  const [comment, setComment] = useState('');
-
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
-    onAddComment(post.id, comment);
-    setComment('');
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-4">
-          <div className="font-semibold">{post.user?.name || 'Anonymous'}</div>
-          <div className="text-xs text-muted-foreground">
-            {new Date(post.created_at).toLocaleString()}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="mb-4">{post.content}</p>
-        <div className="flex items-center gap-4 mb-4">
-          <Button variant="ghost" size="sm" onClick={() => onLike(post.id)} disabled={!currentUser}>
-            <ThumbsUp className="w-4 h-4 mr-2" />
-            {post.likes}
-          </Button>
-          <Button variant="ghost" size="sm" disabled={!currentUser}>
-            <MessageSquare className="w-4 h-4 mr-2" />
-            {post.comments?.length || 0}
-          </Button>
-        </div>
-
-        {/* Comments */}
-        <div className="space-y-2">
-          {post.comments?.map((c) => (
-            <div key={c.id} className="text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded-md">
-              <span className="font-semibold">{c.user?.name || 'Anonymous'}: </span>
-              {c.content}
+            {/* Feed */}
+            <div className="space-y-4">
+                {sortedPosts.map((post) => (
+                    <Card key={post.id}>
+                        <CardHeader className="flex flex-row items-center gap-4">
+                            <Avatar>
+                                <AvatarImage src={post.user.avatarUrl} alt={post.user.name} />
+                                <AvatarFallback>{post.user.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">{post.user.name}</p>
+                                <p className="text-sm text-muted-foreground">{post.timestamp}</p>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="whitespace-pre-wrap">{post.content}</p>
+                            <div className="mt-4 flex items-center gap-6">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                    onClick={() => handleLike(post.id)}
+                                >
+                                    <ThumbsUp
+                                        className={`h-4 w-4 ${post.liked ? 'fill-current' : ''}`}
+                                    />
+                                    {post.likes}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                    onClick={() =>
+                                        setReplyingTo(replyingTo === post.id ? null : post.id)
+                                    }
+                                >
+                                    <MessageSquare className="h-4 w-4" />
+                                    {post.comments.length}
+                                </Button>
+                            </div>
+                            {replyingTo === post.id && (
+                                <div className="mt-4 flex flex-col gap-2">
+                                    <Textarea
+                                        placeholder={`Reply to ${post.user.name}...`}
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        rows={2}
+                                    />
+                                    <Button
+                                        onClick={() => handleCommentSubmit(post.id)}
+                                        className="self-end"
+                                        size="sm"
+                                    >
+                                        Reply
+                                    </Button>
+                                </div>
+                            )}
+                            <div className="mt-4 space-y-2">
+                                {post.comments.map((comment) => (
+                                    <div key={comment.id} className="flex items-start gap-2 text-sm">
+                                        <Avatar className="h-6 w-6">
+                                            <AvatarImage
+                                                src={comment.user.avatarUrl}
+                                                alt={comment.user.name}
+                                            />
+                                            <AvatarFallback>
+                                                {comment.user.name.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 rounded-md bg-muted p-2">
+                                            <p className="font-semibold">{comment.user.name}</p>
+                                            <p>{comment.content}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
-          ))}
         </div>
-
-        {/* Add Comment */}
-        {currentUser && (
-          <form onSubmit={handleCommentSubmit} className="flex gap-2 mt-4">
-            <Input
-              placeholder="Add a comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-            <Button type="submit">
-              <Send className="w-4 h-4" />
-            </Button>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+    </DashboardLayout>
   );
 };
 
-export default Community;
+export default CommunityPage;

@@ -13,20 +13,10 @@ import { toast } from 'sonner';
 interface ReviewFormProps {
   onSubmit: (rating: number, title: string, comment: string, category: string) => Promise<void>;
   isLoading?: boolean;
+  categories: string[];
 }
 
-const CATEGORIES = [
-  'restaurant',
-  'grocery',
-  'delivery',
-  'cafe',
-  'bakery',
-  'farmers-market',
-  'food-truck',
-  'other'
-];
-
-export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = false }) => {
+export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = false, categories }) => {
   const { user } = useUser();
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState('');
@@ -128,7 +118,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit, isLoading = fa
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
                   </SelectItem>

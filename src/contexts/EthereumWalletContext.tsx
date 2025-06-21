@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { ethereumClient, UserRewards, RewardsStats } from '@/integrations/ethereum/client';
-import { isEthereumConfigured } from '@/config/env';
 
 interface EthereumWalletContextType {
   address: string | null;
@@ -35,11 +34,6 @@ interface EthereumWalletProviderProps {
 export const EthereumWalletProvider: React.FC<EthereumWalletProviderProps> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Check if Ethereum is configured
-  if (!isEthereumConfigured()) {
-    console.warn('Ethereum is not configured. Please set VITE_REWARDS_CONTRACT_ADDRESS and VITE_WEB3MODAL_PROJECT_ID in your environment variables.');
-  }
 
   // Load address from localStorage on mount
   useEffect(() => {
@@ -83,11 +77,6 @@ export const EthereumWalletProvider: React.FC<EthereumWalletProviderProps> = ({ 
   }, []);
 
   const connectWallet = async () => {
-    if (!isEthereumConfigured()) {
-      toast.error('Ethereum is not configured');
-      return;
-    }
-
     try {
       setIsLoading(true);
       const account = await ethereumClient.connect();

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,16 +27,15 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+          <Link to="/" className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/14ed19af-011f-47af-b644-a7d767331b87.png" 
+              alt="FoodLoops Logo" 
+              className="w-10 h-10 rounded-full"
+            />
+            <span className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               FoodLoops
             </span>
-            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-xs">
-              Reduce Waste
-            </Badge>
           </Link>
 
           {/* Navigation */}
@@ -64,6 +64,12 @@ const Header = () => {
             >
               Reviews
             </Link>
+            <Link 
+              to="/profile" 
+              className="text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors font-medium"
+            >
+              Profile
+            </Link>
             {user && (user as any).user_type === 'seller' && (
               <Link 
                 to="/seller" 
@@ -83,7 +89,7 @@ const Header = () => {
                 size="sm"
                 className="relative text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-5 h-5 icon-gold" />
                 {cartItemCount > 0 && (
                   <Badge 
                     variant="destructive" 
@@ -105,7 +111,7 @@ const Header = () => {
               onClick={toggleTheme}
               className="text-gray-600 dark:text-gray-300 hover:text-amber-500 dark:hover:text-amber-400"
             >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDark ? <Sun className="w-4 h-4 icon-gold" /> : <Moon className="w-4 h-4 icon-gold" />}
             </Button>
             
             {/* Profile & Auth Button */}

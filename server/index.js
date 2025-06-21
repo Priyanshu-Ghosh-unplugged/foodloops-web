@@ -1,11 +1,24 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const morgan = require('morgan');
 const connectDB = require('./config/database');
 const config = require('./config/config');
 const productsRouter = require('./routes/products');
 const storesRouter = require('./routes/stores');
 const usersRouter = require('./routes/users');
 const ordersRouter = require('./routes/orders');
+
+// Environment variables
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+// Start the cron job scheduler
+require('./scripts/scheduler');
 
 const app = express();
 const PORT = config.port;
@@ -55,6 +68,11 @@ app.use('*', (req, res) => {
     message: `Cannot ${req.method} ${req.originalUrl}`
   });
 });
+
+// Environment variables
+if (process.env.NODE_ENV !== 'production') {
+  // ... existing code ...
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 FoodLoops API server running on port ${PORT}`);

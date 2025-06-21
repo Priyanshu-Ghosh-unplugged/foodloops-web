@@ -2,6 +2,42 @@ const express = require('express');
 const Product = require('../models/Product');
 const router = express.Router();
 
+/**
+ * Calculates the new price of a product based on an exponential decay function.
+ * @param {number} original_price - The starting price of the product.
+ * @param {Date} created_at - The date the product was listed.
+ * @param {Date} expiry_date - The date the product will expire.
+ * @param {number} [decay_rate=0.5] - A factor to control how quickly the price decreases.
+ * @returns {number} The new, calculated price.
+ */
+const calculateDecayedPrice = (
+  original_price,
+  created_at,
+  expiry_date,
+  decay_rate = 0.5
+) => {
+  const now = new Date();
+  // Ensure dates are valid Date objects
+  const createdDate = new Date(created_at);
+  const expiryDate = new Date(expiry_date);
+
+  const total_lifespan = expiryDate.getTime() - createdDate.getTime();
+  const elapsed_time = now.getTime() - createdDate.getTime();
+
+  // If expired or invalid lifespan, return a minimal price
+  if (total_lifespan <= 0 || elapsed_time >= total_lifespan) {
+    return 0.01; 
+  }
+
+  const time_ratio = elapsed_time / total_lifespan;
+  
+  // Using exponential decay: price = original * e^(-decayRate * timeRatio)
+  const new_price = original_price * Math.exp(-decay_rate * time_ratio);
+  
+  // Ensure price is not negative and has two decimal places
+  return Math.max(0.01, parseFloat(new_price.toFixed(2)));
+};
+
 // GET /api/products - Get all active products with filtering
 router.get('/', async (req, res) => {
   try {
@@ -58,8 +94,18 @@ router.get('/', async (req, res) => {
     // Get total count for pagination
     const total = await Product.countDocuments(query);
 
+    // Dynamically calculate the current price for each product
+    const productsWithDynamicPrice = products.map(product => {
+      const new_price = calculateDecayedPrice(
+        product.original_price,
+        product.created_at,
+        product.expiry_date
+      );
+      return { ...product, current_price: new_price };
+    });
+
     res.json({
-      products,
+      products: productsWithDynamicPrice,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -80,6 +126,20 @@ router.get('/:id', async (req, res) => {
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
+    // Recalculate price to ensure it's up-to-date
+    const new_price = calculateDecayedPrice(
+      product.original_price,
+      product.created_at,
+      product.expiry_date
+    );
+
+    // If the calculated price is different, update it in the database
+    if (new_price !== product.current_price) {
+      product.current_price = new_price;
+      await product.save();
+    }
+
     res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
