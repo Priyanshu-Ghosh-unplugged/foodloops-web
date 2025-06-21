@@ -57,7 +57,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* Mandala Background */}
       <div 
         className="absolute inset-0 opacity-10 bg-repeat bg-center"
@@ -87,16 +87,16 @@ const Index = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button 
-                onClick={() => navigate('/products')}
+                onClick={() => navigate('/dashboard')}
                 size="lg"
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                className="bg-brass-gradient text-white rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl hover:shadow-yellow-500/20 transition-all duration-300 hover:scale-105"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 Start Shopping
               </Button>
               
               <Button 
-                onClick={() => navigate('/products')}
+                onClick={() => navigate('/dashboard')}
                 variant="outline"
                 size="lg"
                 className="rounded-full px-8 py-6 text-lg border-amber-300 text-amber-600 hover:bg-amber-50"
@@ -160,14 +160,14 @@ const Index = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
-                  onClick={() => navigate('/products')}
+                  onClick={() => navigate('/dashboard')}
                   size="lg"
                   className="bg-white text-amber-600 hover:bg-gray-50 rounded-full px-8 py-6 text-lg font-semibold"
                 >
                   Join as Buyer
                 </Button>
                 <Button 
-                  onClick={() => navigate('/products')}
+                  onClick={() => navigate('/dashboard')}
                   variant="outline"
                   size="lg"
                   className="border-white text-white hover:bg-white/10 rounded-full px-8 py-6 text-lg"

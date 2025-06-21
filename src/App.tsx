@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -15,13 +14,15 @@ import Community from "./pages/Community";
 import SellerDashboard from "./pages/SellerDashboard";
 import Profile from "./pages/Profile";
 import Reviews from "./pages/Reviews";
+import CartPage from "./pages/CartPage";
+import TransactionPage from './pages/TransactionPage';
 import GeminiChatbot from "./components/Chatbot/GeminiChatbot";
 import "./index.css";
 
 const queryClient = new QueryClient();
 
 // Your Civic Client ID
-const civicClientId = 'c2d3cde1-4a1b-4b4f-9b5d-3b1a2d3c4e5f';
+const civicClientId = '584fc3e9-922e-4b13-95af-cd0a9ea42ba2';
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,6 +42,8 @@ const App = () => (
                     <Route path="/reviews" element={<Reviews />} />
                     <Route path="/seller" element={<SellerDashboard />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/transaction" element={<TransactionPage />} />
                   </Routes>
                   <GeminiChatbot />
                 </BrowserRouter>

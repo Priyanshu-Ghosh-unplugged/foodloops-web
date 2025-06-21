@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@civic/auth-web3/react';
@@ -98,7 +97,7 @@ const Dashboard = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen">
         <Header />
         <main className="container mx-auto px-4 py-8">
             <div className="mb-8">

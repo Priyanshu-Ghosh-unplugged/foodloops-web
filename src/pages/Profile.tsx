@@ -152,7 +152,7 @@ const ProfilePage = () => {
   const ecoLevel = getEcoLevel(ecoScore?.total_items_saved || 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       <Header />
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="profile">
