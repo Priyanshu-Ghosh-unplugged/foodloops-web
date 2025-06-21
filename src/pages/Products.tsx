@@ -24,9 +24,9 @@ import { useCart } from '@/contexts/CartContext';
 type ProductCategory = 'dairy' | 'bakery' | 'meat' | 'produce' | 'pantry' | 'frozen' | 'beverages' | 'other';
 
 const mockRecommendedProducts: Product[] = [
-    { _id: 'prod-2', name: 'Sourdough Bread', price: 220, original_price: 440, expiry_date: new Date().toISOString(), category: 'bakery', image_url: '/placeholder.svg', store_name: 'Community Co-op', description: 'Freshly baked sourdough', quantity_available: 10, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),},
-    { _id: 'prod-3', name: 'Avocados (Bag of 4)', price: 240, original_price: 480, expiry_date: new Date().toISOString(), category: 'produce', image_url: '/placeholder.svg', store_name: "Priyan's Fresh Finds", description: 'Ripe and ready avocados', quantity_available: 15, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
-    { _id: 'prod-1', name: 'Organic Milk', price: 160, original_price: 320, expiry_date: new Date().toISOString(), category: 'dairy', image_url: '/placeholder.svg', store_name: "Priyan's Fresh Finds", description: '1L of organic milk', quantity_available: 20, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
+    { _id: 'prod-2', name: 'Sourdough Bread', price: 220, original_price: 440, expiry_date: new Date().toISOString(), category: 'bakery', image_url: '/images/sourdough-bread.jpg', store_name: 'Community Co-op', description: 'Freshly baked sourdough', quantity_available: 10, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),},
+    { _id: 'prod-3', name: 'Avocados (Bag of 4)', price: 240, original_price: 480, expiry_date: new Date().toISOString(), category: 'produce', image_url: '/images/avocados.jpg', store_name: "Priyan's Fresh Finds", description: 'Ripe and ready avocados', quantity_available: 15, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
+    { _id: 'prod-1', name: 'Organic Milk', price: 160, original_price: 320, expiry_date: new Date().toISOString(), category: 'dairy', image_url: '/images/organic-milk.jpg', store_name: "Priyan's Fresh Finds", description: '1L of organic milk', quantity_available: 20, store_id: '1', seller_id: '1', seller_name: 'Seller', location: {type: 'Point', coordinates: [0,0]}, rating: 5, review_count: 10, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), },
 ];
 
 const ProductsPage = () => {
@@ -121,7 +121,7 @@ const ProductsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
@@ -137,7 +137,7 @@ const ProductsPage = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
         <Header />
         <main className="container mx-auto px-4 py-8">
              <div className="mb-8">

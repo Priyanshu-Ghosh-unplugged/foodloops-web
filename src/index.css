@@ -19,13 +19,13 @@
     background-image: url('/lovable-uploads/f563775a-a0d7-4ba9-95c9-ab56d25a1b68.png');
     background-size: 400px 400px;
     background-repeat: repeat;
-    opacity: 0.15;
+    opacity: 0.5;
     z-index: -1;
     pointer-events: none;
   }
 
   .dark body::before {
-    opacity: 0.18;
+    opacity: 0.5;
   }
 
   h1, h2, h3, h4, h5, h6 {

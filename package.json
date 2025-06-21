@@ -17,7 +17,7 @@
     "preview": "vite preview",
     "_fmt": "prettier 'frontend/**/*.ts'",
     "fmt": "npm run _fmt -- --write",
-    "server": "node server/index.js",
+    "server": "dotenv -e server/.env -- nodemon --watch 'server/**/*.ts' --exec 'ts-node' server/index.js",
     "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
     "seed": "node server/scripts/seed.js"
   },
@@ -97,6 +97,7 @@
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",
     "dotenv": "16.3.1",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
