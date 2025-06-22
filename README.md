@@ -1,6 +1,5 @@
 # 🍔 FoodLoops - Reduce Waste, Share Abundance
 
-![FoodLoops Banner](public/mandala_background.jpg)
 
 FoodLoops is a dynamic web application designed to combat food waste by connecting sellers of surplus food with conscientious buyers. Leveraging a dynamic pricing model, prices for items decrease as their expiration dates approach, ensuring that food gets sold rather than discarded.
 
@@ -88,7 +87,7 @@ This will:
 - Start the Express backend server on `http://localhost:3001`.
 
 
-### 5. # 🔗 Blockchain Setup Guide
+### 5. Blockchain Setup Guide
 
 Quick setup for Aptos and Ethereum integration in FoodLoops.
 
